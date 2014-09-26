@@ -1,0 +1,36 @@
+{
+  "name": "validate-files",
+  "title": "Validate ENCODE Files",
+  "summary": "Run file validation on submitted ENCODE files",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "categories": [
+    "Encode"
+  ],
+  "inputSpec": [
+    {
+      "name": "files",
+      "label": "Submitted Files",
+      "class": "array:file",
+      "optional": false
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "validate_files_out",
+      "label": "validation",
+      "class": "array:file"
+    }
+  ],
+  "runSpec": {
+    "interpreter": "python2.7",
+    "file": "src/validate-files.py"
+  },
+  "access": {
+    "project": "CONTRIBUTE",
+    "network": [
+      "*"
+    ]
+  },
+  "authorizedUsers": []
+}
