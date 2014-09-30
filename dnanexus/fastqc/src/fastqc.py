@@ -13,7 +13,7 @@
 # DNAnexus Python Bindings (dxpy) documentation:
 #   http://autodoc.dnanexus.com/bindings/python/current/
 
-import os
+import os, subprocess, shlex, time
 import dxpy
 
 @dxpy.entry_point("postprocess")
@@ -29,15 +29,24 @@ def postprocess(process_outputs):
     return { "answer": "placeholder value" }
 
 @dxpy.entry_point("process")
-def process(input1):
+def process(fastq):
     # Change the following to process whatever input this stage
     # receives.  You may also want to copy and paste the logic to download
     # and upload files here as well if this stage receives file input
     # and/or makes file output.
 
-    print input1
+    print fastq
+    reads_filename = dxpy.describe(fastq)['name']
+    reads_basename = reads_filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
+    reads_file = dxpy.download_dxfile(fastq,reads_filename)
 
-    return { "output": "placeholder value" }
+    subprocess.check_call('mkdir output')
+    print "Run QC"
+    fqc_command = "/usr/bin/FastQC/fastqc %s -o output" % reads_filename
+    subprocess.check_call(fqc_command)
+    print "Upload result"
+    report_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_filename)
+    return { "report": dxpy.dxlink(dxpy.dxlink(report_dxfile)) }
 
 @dxpy.entry_point("main")
 def main(files):
@@ -50,16 +59,16 @@ def main(files):
     # The following line(s) download your file inputs to the local file system
     # using variable names for the filenames.
 
-    for i, f in enumerate(files):
-        dxpy.download_dxfile(f.get_id(), "files-" + str(i))
+    #for i, f in enumerate(files):
+    #    dxpy.download_dxfile(f.get_id(), "files-" + str(i))
 
     # Split your work into parallel tasks.  As an example, the
     # following generates 10 subjobs running with the same dummy
     # input.
 
     subjobs = []
-    for i in range(10):
-        subjob_input = { "input1": True }
+    for fastq in files:
+        subjob_input = { "fastq": fastq }
         subjobs.append(dxpy.new_dxjob(subjob_input, "process"))
 
     # The following line creates the job that will perform the
@@ -82,7 +91,7 @@ def main(files):
     # job-based object references in the input that refer to the same
     # set of jobs.
 
-    postprocess_job = dxpy.new_dxjob(fn_input={ "process_outputs": [subjob.get_output_ref("output") for subjob in subjobs] },
+    postprocess_job = dxpy.new_dxjob(fn_input={ "FastQC_reports": [subjob.get_output_ref("output") for subjob in subjobs] },
                                      fn_name="postprocess",
                                      depends_on=subjobs)
 
@@ -92,7 +101,7 @@ def main(files):
     # the postprocess function is called "answer", you can pass that
     # on here as follows:
     #
-    # return { "app_output_field": postprocess_job.get_output_ref("answer"), ...}
+    return { "FastQC_reports": postprocess_job.get_output_ref("report") }
     #
     # Tip: you can include in your output at this point any open
     # objects (such as gtables) which will be closed by a job that
@@ -100,10 +109,10 @@ def main(files):
     # output object is closed and will attempt to clone it out as
     # output into the parent container only after all subjobs have
     # finished.
+    #FastQC_reports = postprocess_job.get_output_ref("fastqc_report")
+    #output = {}
+    #output["FastQC_reports"] = [dxpy.dxlink(item) for item in FastQC_reports]
 
-    output = {}
-    output["FastQC_reports"] = [dxpy.dxlink(item) for item in FastQC_reports]
-
-    return output
+    #return output
 
 dxpy.run()
