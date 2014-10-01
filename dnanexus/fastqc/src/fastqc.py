@@ -17,16 +17,15 @@ import os, subprocess, shlex, time
 import dxpy
 
 @dxpy.entry_point("postprocess")
-def postprocess(process_outputs):
+def postprocess(report):
     # Change the following to process whatever input this stage
     # receives.  You may also want to copy and paste the logic to download
     # and upload files here as well if this stage receives file input
     # and/or makes file output.
 
-    for output in process_outputs:
-        pass
-
-    return { "answer": "placeholder value" }
+    #for output in reports:
+    #   pass
+    return { "report": report }
 
 @dxpy.entry_point("process")
 def process(fastq):
@@ -38,18 +37,20 @@ def process(fastq):
     print fastq
     reads_filename = dxpy.describe(fastq)['name']
     reads_basename = reads_filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
-    reads_file = dxpy.download_dxfile(fastq,reads_filename)
+    reads_file = dxpy.download_dxfile(fastq,"fastq.gz")
 
     subprocess.check_call(['mkdir', 'output'])
     print "Run QC"
-    fqc_command = "/usr/bin/FastQC/fastqc %s -o output" % reads_filename
+    fqc_command = "/usr/bin/FastQC/fastqc fastq.gz -o output"
     print fqc_command
     stdio = subprocess.check_output(shlex.split(fqc_command))
     print stdio
     print subprocess.check_output(['ls','-l', 'output'])
     print "Upload result"
-    report_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_basename)
-    return { "report": dxpy.dxlink(dxpy.dxlink(report_dxfile)) }
+    subprocess.check_call(['mv','output/fastq_fastqc.zip', "%s_fastqc.zip" % reads_basename])
+    report_dxfile = dxpy.upload_local_file("%s_fastqc.zip" % reads_basename)
+    print report_dxfile
+    return { "report": report_dxfile }
 
 @dxpy.entry_point("main")
 def main(files):
@@ -94,7 +95,7 @@ def main(files):
     # job-based object references in the input that refer to the same
     # set of jobs.
 
-    postprocess_job = dxpy.new_dxjob(fn_input={ "FastQC_reports": [subjob.get_output_ref("report") for subjob in subjobs] },
+    postprocess_job = dxpy.new_dxjob(fn_input={ "report": [subjob.get_output_ref("report") for subjob in subjobs] },
                                      fn_name="postprocess",
                                      depends_on=subjobs)
 
@@ -104,7 +105,7 @@ def main(files):
     # the postprocess function is called "answer", you can pass that
     # on here as follows:
     #
-    return { "FastQC_reports": postprocess_job.get_output_ref("report") }
+    #return { "FastQC_reports": [ dxpy.dxlink(item) for item in postprocess_job.get_output_ref("report") ]}
     #
     # Tip: you can include in your output at this point any open
     # objects (such as gtables) which will be closed by a job that
@@ -112,10 +113,13 @@ def main(files):
     # output object is closed and will attempt to clone it out as
     # output into the parent container only after all subjobs have
     # finished.
-    #FastQC_reports = postprocess_job.get_output_ref("fastqc_report")
-    #output = {}
-    #output["FastQC_reports"] = [dxpy.dxlink(item) for item in FastQC_reports]
+    FastQC_reports = []
+    FastQC_reports.append(postprocess_job.get_output_ref("report"))
+    output = {}
+    print FastQC_reports
+#    output["FastQC_reports"] = [ dxpy.dxlink(item)  for item in FastQC_reports]
+    output["FastQC_reports"] = FastQC_reports
 
-    #return output
+    return output
 
 dxpy.run()
