@@ -94,7 +94,7 @@ def main(files):
     # job-based object references in the input that refer to the same
     # set of jobs.
 
-    postprocess_job = dxpy.new_dxjob(fn_input={ "FastQC_reports": [subjob.get_output_ref("output") for subjob in subjobs] },
+    postprocess_job = dxpy.new_dxjob(fn_input={ "FastQC_reports": [subjob.get_output_ref("report") for subjob in subjobs] },
                                      fn_name="postprocess",
                                      depends_on=subjobs)
 

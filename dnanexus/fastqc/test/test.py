@@ -19,12 +19,20 @@ def makeInputs():
             {
                 "$dnanexus_link": {
                     "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
-                    "id": "file-BJkBygQ04b2VXbKK81YQ11pf"
+                    "id": "file-BKyfb080ZZ0P4jQFVGB01966"
                 }
             }
         ]
     }
-
+'''
+Bigger File
+            {
+                "$dnanexus_link": {
+                    "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
+                    "id": "file-BJkBygQ04b2VXbKK81YQ11pf"
+                }
+            }
+'''
 
 class Testfastqc(unittest.TestCase):
     @classmethod
