@@ -40,12 +40,15 @@ def process(fastq):
     reads_basename = reads_filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
     reads_file = dxpy.download_dxfile(fastq,reads_filename)
 
-    subprocess.check_call('mkdir output')
+    subprocess.check_call(['mkdir', 'output'])
     print "Run QC"
     fqc_command = "/usr/bin/FastQC/fastqc %s -o output" % reads_filename
-    subprocess.check_call(fqc_command)
+    print fqc_command
+    stdio = subprocess.check_output(shlex.split(fqc_command))
+    print stdio
+    print subprocess.check_output(['ls','-l', 'output'])
     print "Upload result"
-    report_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_filename)
+    report_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_basename)
     return { "report": dxpy.dxlink(dxpy.dxlink(report_dxfile)) }
 
 @dxpy.entry_point("main")
@@ -54,7 +57,7 @@ def main(files):
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
 
-    files = [dxpy.DXFile(item) for item in files]
+    #files = [dxpy.DXFile(item) for item in files]
 
     # The following line(s) download your file inputs to the local file system
     # using variable names for the filenames.

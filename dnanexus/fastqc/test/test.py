@@ -14,7 +14,17 @@ test_resources_dir = os.path.join(src_dir, "test", "resources")
 
 def makeInputs():
     # Please fill in this method to generate default inputs for your app.
-    return {}
+    return {
+        "files": [
+            {
+                "$dnanexus_link": {
+                    "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
+                    "id": "file-BJkBygQ04b2VXbKK81YQ11pf"
+                }
+            }
+        ]
+    }
+
 
 class Testfastqc(unittest.TestCase):
     @classmethod
