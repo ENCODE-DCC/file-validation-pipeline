@@ -15,6 +15,35 @@
 
 import os, subprocess, shlex, time
 import dxpy
+import requests
+
+encValData  = '/usr/bin/encValData'
+validate_map = {
+    'bam': ['-type=bam'],
+    'bed': ['-type=bed6+'],  # if this fails we will drop to bed3+
+    'bedLogR': ['-type=bigBed9+1', '-as=%s/as/bedLogR.as' % encValData],
+    'bed_bedLogR': ['-type=bed9+1', '-as=%s/as/bedLogR.as' % encValData],
+    'bedMethyl': ['-type=bigBed9+2', '-as=%s/as/bedMethyl.as' % encValData],
+    'bed_bedMethyl': ['-type=bed9+2', '-as=%s/as/bedMethyl.as' % encValData],
+    'bigBed': ['-type=bigBed6+'],  # if this fails we will drop to bigBed3+
+    'bigWig': ['-type=bigWig'],
+    'broadPeak': ['-type=bigBed6+3', '-as=%s/as/broadPeak.as' % encValData],
+    'bed_broadPeak': ['-type=bed6+3', '-as=%s/as/broadPeak.as' % encValData],
+    'fasta': ['-type=fasta'],
+    'fastq': ['-type=fastq'],
+    'gtf': None,
+    'idat': ['-type=idat'],
+    'narrowPeak': ['-type=bigBed6+4', '-as=%s/as/narrowPeak.as' % encValData],
+    'bed_narrowPeak': ['-type=bed6+4', '-as=%s/as/narrowPeak.as' % encValData],
+    'rcc': ['-type=rcc'],
+    'tar': None,
+    'tsv': None,
+    '2bit': None,
+    'csfasta': ['-type=csfasta'],
+    'csqual': ['-type=csqual'],
+    'bedRnaElements': ['-type=bed6+3', '-as=%s/as/bedRnaElements.as' % encValData],
+    'CEL': None,
+}
 
 @dxpy.entry_point("postprocess")
 def postprocess(report):
@@ -28,22 +57,26 @@ def postprocess(report):
     return { "report": report }
 
 @dxpy.entry_point("process")
-def process(fastq):
+def process(file_obj, file_type):
     # Change the following to process whatever input this stage
     # receives.  You may also want to copy and paste the logic to download
     # and upload files here as well if this stage receives file input
     # and/or makes file output.
 
-    print fastq
-    reads_filename = dxpy.describe(fastq)['name']
-    reads_basename = reads_filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
-    reads_file = dxpy.download_dxfile(fastq,"fastq.gz")
+    print file_obj, file_type
+    filename = dxpy.describe(file_obj)['name']
+    basename = filename.rstrip('.gz')
+    dx_file = dxpy.download_dxfile(file_obj, filename)
 
-    subprocess.check_call(['mkdir', 'output'])
-    print "Run QC"
-    fqc_command = "/usr/bin/FastQC/fastqc fastq.gz -o output"
-    print fqc_command
-    stdio = subprocess.check_output(shlex.split(fqc_command))
+    print "Run Validate Files"
+    validate_args = validate_map.get(data['file_format'])
+    if validate_args is not None:
+        print("Validating file.")
+        try:
+            subprocess.check_output(['validateFiles'] + validate_args + [path])
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            raise
     print stdio
     print subprocess.check_output(['ls','-l', 'output'])
     print "Upload result"
