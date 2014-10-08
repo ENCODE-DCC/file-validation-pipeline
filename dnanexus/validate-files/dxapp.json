@@ -13,12 +13,6 @@
       "label": "Submitted Files",
       "class": "array:file",
       "optional": false
-    },
-    {
-      "name": "file_objects",
-      "label": "file metadata objects",
-      "class": "array:hash",
-      "optional": false
     }
   ],
   "outputSpec": [

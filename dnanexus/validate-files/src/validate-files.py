@@ -17,6 +17,16 @@ import os, subprocess, shlex, time
 import dxpy
 import requests
 
+AUTHID='user'; AUTHPW='secret'
+HEADERS = {'content-type': 'application/json'}
+SERVER = 'https://www.encodeproject.org/'
+S3_SERVER='s3://encode-files/'
+
+#get all the file objects
+files = requests.get(
+    'https://www.encodeproject.org/search/?type=file&frame=embedded&limit=all',
+    auth=(AUTHID,AUTHPW), headers=HEADERS).json()['@graph']
+
 encValData  = '/usr/bin/encValData'
 validate_map = {
     'bam': ['-type=bam'],
@@ -100,7 +110,7 @@ def process(file_obj, file_meta):
     }
 
 @dxpy.entry_point("main")
-def main(files, file_meta_objects):
+def main(files):
 
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
@@ -118,7 +128,8 @@ def main(files, file_meta_objects):
     # input.
 
     subjobs = []
-    for (file_obj, file_meta) in zip(files, file_meta_objects):
+    for file_obj in files:
+
         subjob_input = {
             "file_obj": file_obj,
             "file_meta": file_meta
@@ -163,12 +174,16 @@ def main(files, file_meta_objects):
     # output object is closed and will attempt to clone it out as
     # output into the parent container only after all subjobs have
     # finished.
-    FastQC_reports = []
-    FastQC_reports.append(postprocess_job.get_output_ref("report"))
+    validate_reports = []
+    validations = []
+    validate_reports.append(postprocess_job.get_output_ref("report"))
+    validations.append(postprocess_job.get_output_ref("validation"))
     output = {}
-    print FastQC_reports
+    print validate_reports
+    print validations
 #    output["FastQC_reports"] = [ dxpy.dxlink(item)  for item in FastQC_reports]
-    output["FastQC_reports"] = FastQC_reports
+    output["validate_reports"] = validate_reports
+    output["validate_errors"] = validations
 
     return output
 
