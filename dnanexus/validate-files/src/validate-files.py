@@ -45,8 +45,14 @@ validate_map = {
     'CEL': None,
 }
 
+assembly = {
+    'human': 'hg19',
+    'mouse': 'mm10',
+    'dmelanogaster': 'dm6'
+}
+
 @dxpy.entry_point("postprocess")
-def postprocess(report):
+def postprocess(report, valid):
     # Change the following to process whatever input this stage
     # receives.  You may also want to copy and paste the logic to download
     # and upload files here as well if this stage receives file input
@@ -54,39 +60,47 @@ def postprocess(report):
 
     #for output in reports:
     #   pass
-    return { "report": report }
+    return {
+        "report": report,
+        "validation": valid
+    }
 
 @dxpy.entry_point("process")
-def process(file_obj, file_type):
+def process(file_obj, file_meta):
     # Change the following to process whatever input this stage
     # receives.  You may also want to copy and paste the logic to download
     # and upload files here as well if this stage receives file input
     # and/or makes file output.
 
-    print file_obj, file_type
+    print file_obj, file_meta
     filename = dxpy.describe(file_obj)['name']
     basename = filename.rstrip('.gz')
     dx_file = dxpy.download_dxfile(file_obj, filename)
 
     print "Run Validate Files"
-    validate_args = validate_map.get(data['file_format'])
+    validate_args = validate_map.get(file_obj['file_format'])
+    chromInfo = '-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly[file_obj['organism']])
     if validate_args is not None:
         print("Validating file.")
         try:
-            subprocess.check_output(['validateFiles'] + validate_args + [path])
+            valid = subprocess.check_output(['/usr/bin/validateFiles'] + validate_args + [chromInfo] + ['-doReport'] + [dx_file])
         except subprocess.CalledProcessError as e:
+            valid = "Process Error"
             print(e.output)
             raise
-    print stdio
-    print subprocess.check_output(['ls','-l', 'output'])
+
+    print valid
+    print subprocess.check_output(['ls','-l'])
     print "Upload result"
-    subprocess.check_call(['mv','output/fastq_fastqc.zip', "%s_fastqc.zip" % reads_basename])
-    report_dxfile = dxpy.upload_local_file("%s_fastqc.zip" % reads_basename)
+    report_dxfile = dxpy.upload_local_file("%s.report" % filename)
     print report_dxfile
-    return { "report": report_dxfile }
+    return {
+        "report": report_dxfile,
+        "validation": valid
+    }
 
 @dxpy.entry_point("main")
-def main(files):
+def main(files, file_meta_objects):
 
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
@@ -104,8 +118,11 @@ def main(files):
     # input.
 
     subjobs = []
-    for fastq in files:
-        subjob_input = { "fastq": fastq }
+    for (file_obj, file_meta) in zip(files, file_meta_objects):
+        subjob_input = {
+            "file_obj": file_obj,
+            "file_meta": file_meta
+        }
         subjobs.append(dxpy.new_dxjob(subjob_input, "process"))
 
     # The following line creates the job that will perform the

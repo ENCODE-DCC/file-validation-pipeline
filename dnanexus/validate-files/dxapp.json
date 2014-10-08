@@ -13,14 +13,26 @@
       "label": "Submitted Files",
       "class": "array:file",
       "optional": false
+    },
+    {
+      "name": "file_objects",
+      "label": "file metadata objects",
+      "class": "array:hash",
+      "optional": false
     }
   ],
   "outputSpec": [
     {
       "name": "validate_files_out",
-      "label": "validation",
+      "label": "validateFiles report",
       "class": "array:file"
+    },
+    {
+      "name": "validate_errors",
+      "label": "validation errors",
+      "class": "array:string"
     }
+
   ],
   "runSpec": {
     "interpreter": "python2.7",

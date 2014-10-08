@@ -14,9 +14,35 @@ test_resources_dir = os.path.join(src_dir, "test", "resources")
 
 def makeInputs():
     # Please fill in this method to generate default inputs for your app.
-    return {}
+    return {
+        "files": [
+            {
+                "$dnanexus_link": {
+                    "project": "project-BJkVqzj0KKbf9JbgJ9B002zq",
+                    "id": "file-BJjfpB804b2bxgJ164g4JZ63"
+                }
+            },
+            {
+                "$dnanexus_link": {
+                    "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
+                    "id": "file-BJkBygQ04b2VXbKK81YQ11pf"
+                }
+            }
+        ],
+        "file_objects": [
+            {
+                "type": "bam",
+                "organism": "mouse"
+            },
+            {
+                "type": "fastq",
+                "organism": "human"
+            }
+        ]
 
-class Testvalidate-files(unittest.TestCase):
+    }
+
+class TestValidateFiles(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Upload the app to the Platform.
