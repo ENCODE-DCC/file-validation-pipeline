@@ -81,22 +81,24 @@ def process(file_obj, file_meta):
     # and upload files here as well if this stage receives file input
     # and/or makes file output.
 
-    print file_obj, file_meta
+    print file_obj
+    print file_meta
     filename = dxpy.describe(file_obj)['name']
     basename = filename.rstrip('.gz')
     dx_file = dxpy.download_dxfile(file_obj, filename)
 
     print "Run Validate Files"
-    validate_args = validate_map.get(file_obj['file_format'])
+    validate_args = validate_map.get(file_meta['file_format'])
     assembly = file_obj.get('assembly')
     if assembly:
         chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly)]
     else:
-        chromInfo = []
+        chromInfo = ['']
 
     if validate_args is not None:
         print("Validating file.")
         try:
+            print " ".join(['/usr/bin/validateFiles'] + validate_args + chromInfo + ['-doReport'] + [dx_file])
             valid = subprocess.check_output(['/usr/bin/validateFiles'] + validate_args + chromInfo + ['-doReport'] + [dx_file])
         except subprocess.CalledProcessError as e:
             valid = "Process Error"
