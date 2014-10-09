@@ -16,16 +16,19 @@
 import os, subprocess, shlex, time
 import dxpy
 import requests
+import json
 
-AUTHID='user'; AUTHPW='secret'
 HEADERS = {'content-type': 'application/json'}
 SERVER = 'https://www.encodeproject.org/'
 S3_SERVER='s3://encode-files/'
 
+try:
+    auth = json.load(open("keys.json"))
+except:
+    print "Error loading AUTH keys.  Please add JSON file with AUTHID and AUTHPW named 'keys.json'"
+    exit
+
 #get all the file objects
-files = requests.get(
-    'https://www.encodeproject.org/search/?type=file&frame=embedded&limit=all',
-    auth=(AUTHID,AUTHPW), headers=HEADERS).json()['@graph']
 
 encValData  = '/usr/bin/encValData'
 validate_map = {
@@ -53,12 +56,6 @@ validate_map = {
     'csqual': ['-type=csqual'],
     'bedRnaElements': ['-type=bed6+3', '-as=%s/as/bedRnaElements.as' % encValData],
     'CEL': None,
-}
-
-assembly = {
-    'human': 'hg19',
-    'mouse': 'mm10',
-    'dmelanogaster': 'dm6'
 }
 
 @dxpy.entry_point("postprocess")
@@ -89,11 +86,16 @@ def process(file_obj, file_meta):
 
     print "Run Validate Files"
     validate_args = validate_map.get(file_obj['file_format'])
-    chromInfo = '-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly[file_obj['organism']])
+    assembly = file_obj.get('assembly')
+    if assembly:
+        chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly)]
+    else:
+        chromInfo = []
+
     if validate_args is not None:
         print("Validating file.")
         try:
-            valid = subprocess.check_output(['/usr/bin/validateFiles'] + validate_args + [chromInfo] + ['-doReport'] + [dx_file])
+            valid = subprocess.check_output(['/usr/bin/validateFiles'] + validate_args + chromInfo + ['-doReport'] + [dx_file])
         except subprocess.CalledProcessError as e:
             valid = "Process Error"
             print(e.output)
@@ -129,6 +131,17 @@ def main(files):
 
     subjobs = []
     for file_obj in files:
+
+        filename = dxpy.describe(file_obj)['name']
+        encff = regex.compile('ENCFF[0-9]{3}[A-Z]{3}')
+        try:
+            file_acc = encff.match(filename).group()
+        except:
+            print "Filename %s is not an ENCODE file" % filename
+            exit(0)
+
+        file_meta = requests.get(SERVER+'/'+file_acc+'/?frame=embedded', \
+            auth=(auth['AUTHID'],auth['AUTHPW']), headers=HEADERS).json()
 
         subjob_input = {
             "file_obj": file_obj,
