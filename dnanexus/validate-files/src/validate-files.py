@@ -25,7 +25,7 @@ S3_SERVER='s3://encode-files/'
 
 auth = {}
 try:
-    auth = json.load(open("keys.json"))
+    auth = json.load(open("/keys.json"))
 except:
     print "Error loading AUTH keys.  Please add JSON file with AUTHID and AUTHPW named 'keys.json'"
     exit
