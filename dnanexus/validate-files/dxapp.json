@@ -10,14 +10,14 @@
   "inputSpec": [
     {
       "name": "files",
-      "label": "Submitted Files",
+      "label": "Submitted File Names (ENCFF..)",
       "class": "array:file",
       "optional": false
     }
   ],
   "outputSpec": [
     {
-      "name": "validate_files_out",
+      "name": "validate_reports",
       "label": "validateFiles report",
       "class": "array:file"
     },

@@ -17,11 +17,13 @@ import os, subprocess, shlex, time
 import dxpy
 import requests
 import json
+import re
 
 HEADERS = {'content-type': 'application/json'}
 SERVER = 'https://www.encodeproject.org/'
 S3_SERVER='s3://encode-files/'
 
+auth = {}
 try:
     auth = json.load(open("keys.json"))
 except:
@@ -133,7 +135,7 @@ def main(files):
     for file_obj in files:
 
         filename = dxpy.describe(file_obj)['name']
-        encff = regex.compile('ENCFF[0-9]{3}[A-Z]{3}')
+        encff = re.compile('ENCFF[0-9]{3}[A-Z]{3}')
         try:
             file_acc = encff.match(filename).group()
         except:

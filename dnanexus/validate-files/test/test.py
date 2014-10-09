@@ -28,18 +28,7 @@ def makeInputs():
                     "id": "file-BJkBygQ04b2VXbKK81YQ11pf"
                 }
             }
-        ],
-        "file_objects": [
-            {
-                "type": "bam",
-                "organism": "mouse"
-            },
-            {
-                "type": "fastq",
-                "organism": "human"
-            }
         ]
-
     }
 
 class TestValidateFiles(unittest.TestCase):
