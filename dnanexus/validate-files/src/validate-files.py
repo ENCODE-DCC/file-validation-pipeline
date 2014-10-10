@@ -101,7 +101,7 @@ def process(file_obj, file_meta):
     valid = "Not validated yet"
     if validate_args is not None:
         print("Validating file.")
-        validation_command = ['validateFiles'] + validate_args + chromInfo + ['-doReport'] + [filename]
+        validation_command = ['validateFiles'] + ['-verbose=2'] + validate_args + chromInfo + ['-doReport'] + [filename]
         try:
             print " ".join(validation_command)
             valid = subprocess.check_call(validation_command)
