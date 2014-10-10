@@ -23,16 +23,18 @@ HEADERS = {'content-type': 'application/json'}
 SERVER = 'https://www.encodeproject.org/'
 S3_SERVER='s3://encode-files/'
 
+DATA = os.environ['DX_FS_ROOT']+"/opt/data/"
+
 auth = {}
 try:
-    auth = json.load(open("/keys.json"))
+    auth = json.load(open(DATA+"keys.json"))
 except:
-    print "Error loading AUTH keys.  Please add JSON file with AUTHID and AUTHPW named 'keys.json'"
+    print "Error loading AUTH keys.  Please add JSON file with AUTHID and AUTHPW named 'keys.json' to (resources)/opt/data"
     exit
 
 #get all the file objects
 
-encValData  = '/usr/bin/encValData'
+encValData  = DATA+'encValData'
 validate_map = {
     'bam': ['-type=bam'],
     'bed': ['-type=bed6+'],  # if this fails we will drop to bed3+
@@ -99,7 +101,7 @@ def process(file_obj, file_meta):
     valid = "Not validated yet"
     if validate_args is not None:
         print("Validating file.")
-        validation_command = ['/usr/bin/validateFiles'] + validate_args + chromInfo + ['-doReport'] + [filename]
+        validation_command = ['validateFiles'] + validate_args + chromInfo + ['-doReport'] + [filename]
         try:
             print " ".join(validation_command)
             valid = subprocess.check_call(validation_command)
