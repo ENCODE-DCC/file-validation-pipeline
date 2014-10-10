@@ -95,15 +95,19 @@ def process(file_obj, file_meta):
     else:
         chromInfo = ['']
 
+    print subprocess.check_output(['ls','-l'])
+    valid = "Not validated yet"
     if validate_args is not None:
         print("Validating file.")
+        validation_command = ['/usr/bin/validateFiles'] + validate_args + chromInfo + ['-doReport'] + [filename]
         try:
-            print " ".join(['/usr/bin/validateFiles'] + validate_args + chromInfo + ['-doReport'] + [dx_file])
-            valid = subprocess.check_output(['/usr/bin/validateFiles'] + validate_args + chromInfo + ['-doReport'] + [dx_file])
+            print " ".join(validation_command)
+            valid = subprocess.check_call(validation_command)
         except subprocess.CalledProcessError as e:
-            valid = "Process Error"
+            pass
+            #valid = "Process Error"
             print(e.output)
-            raise
+            #raise
 
     print valid
     print subprocess.check_output(['ls','-l'])
