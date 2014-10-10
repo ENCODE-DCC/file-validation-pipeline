@@ -91,7 +91,7 @@ def process(file_obj, file_meta):
 
     print "Run Validate Files"
     validate_args = validate_map.get(file_meta['file_format'])
-    assembly = file_obj.get('assembly')
+    assembly = file_meta.get('assembly')
     if assembly:
         chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly)]
     else:
