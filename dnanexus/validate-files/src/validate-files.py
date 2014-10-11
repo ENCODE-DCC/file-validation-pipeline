@@ -95,7 +95,7 @@ def process(file_obj, file_meta):
     if assembly:
         chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly)]
     else:
-        chromInfo = ['']
+        chromInfo = ['-chromInfo=%s/hg19/chrom.sizes' % encValData]
 
     print subprocess.check_output(['ls','-l'])
     valid = "Not validated yet"
