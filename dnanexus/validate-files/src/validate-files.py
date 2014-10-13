@@ -23,7 +23,8 @@ HEADERS = {'content-type': 'application/json'}
 SERVER = 'https://www.encodeproject.org/'
 S3_SERVER='s3://encode-files/'
 
-DATA = os.environ['DX_FS_ROOT']+"/opt/data/"
+root_dir = os.environ.get('DX_FS_ROOT') or ""
+DATA = root_dir+"/opt/data/"
 
 auth = {}
 try:
@@ -104,7 +105,7 @@ def process(file_obj, file_meta):
         validation_command = ['validateFiles'] + ['-verbose=2'] + validate_args + chromInfo + ['-doReport'] + [filename]
         try:
             print " ".join(validation_command)
-            valid = subprocess.check_call(validation_command)
+            valid = subprocess.check_output(validation_command)
         except subprocess.CalledProcessError as e:
             pass
             #valid = "Process Error"
@@ -179,7 +180,10 @@ def main(files):
     # job-based object references in the input that refer to the same
     # set of jobs.
 
-    postprocess_job = dxpy.new_dxjob(fn_input={ "report": [subjob.get_output_ref("report") for subjob in subjobs] },
+    postprocess_job = dxpy.new_dxjob(fn_input={
+                                    "report": [subjob.get_output_ref("report") for subjob in subjobs],
+                                    "valid": [subjob.get_output_ref("validation") for subjob in subjobs]
+                                    },
                                      fn_name="postprocess",
                                      depends_on=subjobs)
 
