@@ -46,11 +46,20 @@ def process(fastq):
     stdio = subprocess.check_output(shlex.split(fqc_command))
     print stdio
     print subprocess.check_output(['ls','-l', 'output'])
-    print "Upload result"
+    subprocess.check_call(['unzip', 'output/fastq_fastq.zip'])
+    print "Upload results"
+    subprocess.check_call(['mv', 'output/fastq_fastqc/fastqc_data.txt', "%s_data.txt" % reads_basename])
+    subprocess.check_call(['mv', 'output/fastq_fastqc/summary.txt', "%s_summary.txt" % reads_basename])
     subprocess.check_call(['mv','output/fastq_fastqc.zip', "%s_fastqc.zip" % reads_basename])
-    report_dxfile = dxpy.upload_local_file("%s_fastqc.zip" % reads_basename)
+    report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename)
+    summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename)
+    zip_dxfile = dxpy.upload_local_file("%s_fastqc.zip" % reads_basename)
     print report_dxfile
-    return { "report": report_dxfile }
+    return {
+        "report": report_dxfile,
+        "summary": summary_dxfile,
+        "zip": zip_dxfile
+     }
 
 @dxpy.entry_point("main")
 def main(files):
