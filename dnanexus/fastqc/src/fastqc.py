@@ -17,7 +17,7 @@ import os, subprocess, shlex, time
 import dxpy
 
 @dxpy.entry_point("postprocess")
-def postprocess(report):
+def postprocess(reports):
     # Change the following to process whatever input this stage
     # receives.  You may also want to copy and paste the logic to download
     # and upload files here as well if this stage receives file input
@@ -25,7 +25,7 @@ def postprocess(report):
 
     #for output in reports:
     #   pass
-    return { "report": report }
+    return reports
 
 @dxpy.entry_point("process")
 def process(fastq):
@@ -123,11 +123,18 @@ def main(files):
     # output into the parent container only after all subjobs have
     # finished.
     FastQC_reports = []
-    FastQC_reports.append(postprocess_job.get_output_ref("report"))
+    FastQC_reports.append(postprocess_job.get_output_ref("reports")['report'])
+    FastQC_zip = []
+    FastQC_zip.append(postprocess_job.get_output_ref("reports")['zip'])
+    FastQC_summary = []
+    FastQC_summary.append(postprocess_job.get_output_ref("reports")['summary'])
+
     output = {}
     print FastQC_reports
 #    output["FastQC_reports"] = [ dxpy.dxlink(item)  for item in FastQC_reports]
     output["FastQC_reports"] = FastQC_reports
+    output["FastQC_zip"] = FastQC_zip
+    output["FastQC_summary"] = FastQC_summary
 
     return output
 
