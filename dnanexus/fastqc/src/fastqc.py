@@ -46,10 +46,10 @@ def process(fastq):
     stdio = subprocess.check_output(shlex.split(fqc_command))
     print stdio
     print subprocess.check_output(['ls','-l', 'output'])
-    subprocess.check_call(['unzip', 'output/fastq_fastq.zip'])
+    subprocess.check_call(['unzip', 'output/fastq_fastqc.zip'])
     print "Upload results"
-    subprocess.check_call(['mv', 'output/fastq_fastqc/fastqc_data.txt', "%s_data.txt" % reads_basename])
-    subprocess.check_call(['mv', 'output/fastq_fastqc/summary.txt', "%s_summary.txt" % reads_basename])
+    subprocess.check_call(['mv', 'fastq_fastqc/fastqc_data.txt', "%s_data.txt" % reads_basename])
+    subprocess.check_call(['mv', 'fastq_fastqc/summary.txt', "%s_summary.txt" % reads_basename])
     subprocess.check_call(['mv','output/fastq_fastqc.zip', "%s_fastqc.zip" % reads_basename])
     report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename)
     summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename)
@@ -59,7 +59,7 @@ def process(fastq):
         "report": report_dxfile,
         "summary": summary_dxfile,
         "zip": zip_dxfile
-     }
+    }
 
 @dxpy.entry_point("main")
 def main(files):
@@ -103,11 +103,15 @@ def main(files):
     # completeness, though it is unnecessary if you are providing
     # job-based object references in the input that refer to the same
     # set of jobs.
-
-    postprocess_job = dxpy.new_dxjob(fn_input={ "report": [subjob.get_output_ref("report") for subjob in subjobs] },
-                                     fn_name="postprocess",
-                                     depends_on=subjobs)
-
+    '''
+    postprocess_job = dxpy.new_dxjob(fn_input={
+                "report": [subjob.get_output_ref("report") for subjob in subjobs],
+                "summary": [subjob.get_output_ref("summary") for subjob in subjobs],
+                "zips": [subjob.get_output_ref("zips") for subjob in subjobs],
+                },
+                fn_name="postprocess",
+                depends_on=subjobs)
+    '''
     # If you would like to include any of the output fields from the
     # postprocess_job as the output of your app, you should return it
     # here using a job-based object reference.  If the output field in
@@ -122,19 +126,25 @@ def main(files):
     # output object is closed and will attempt to clone it out as
     # output into the parent container only after all subjobs have
     # finished.
-    FastQC_reports = []
-    FastQC_reports.append(postprocess_job.get_output_ref("reports")['report'])
-    FastQC_zip = []
-    FastQC_zip.append(postprocess_job.get_output_ref("reports")['zip'])
-    FastQC_summary = []
-    FastQC_summary.append(postprocess_job.get_output_ref("reports")['summary'])
 
-    output = {}
-    print FastQC_reports
+    output = {
+                "reports": [subjob.get_output_ref("report") for subjob in subjobs],
+                "summaries": [subjob.get_output_ref("summary") for subjob in subjobs],
+                "zips": [subjob.get_output_ref("zip") for subjob in subjobs],
+    }
+
+    '''
+    for job in postprocess_job.get_output_ref("reports"):
+        item = dxpy.dxlink(job)
+        output['FastQC_reports'].append(item['report'])
+        output['FastQC_zip'].append(item['zip'])
+        output['FastQC_summary'].append(item['summary'])
+    '''
+
 #    output["FastQC_reports"] = [ dxpy.dxlink(item)  for item in FastQC_reports]
-    output["FastQC_reports"] = FastQC_reports
-    output["FastQC_zip"] = FastQC_zip
-    output["FastQC_summary"] = FastQC_summary
+#    output["FastQC_reports"] = FastQC_reports
+#    output["FastQC_zip"] = FastQC_zip
+#    output["FastQC_summary"] = FastQC_summary
 
     return output
 

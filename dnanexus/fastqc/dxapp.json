@@ -17,18 +17,18 @@
   ],
   "outputSpec": [
     {
-      "name": "FastQC_report",
+      "name": "reports",
       "label": "Full reports from FastQC",
       "class": "array:file"
     },
     {
-      "name": "FastQC_zip",
+      "name": "zips",
       "label": "Zipped reports from FastQC",
       "class": "array:file"
     },
     {
-      "name": "FastQC_summary",
-      "label": "Summary FastQC",
+      "name": "summaries",
+      "label": "Summaries of FastQC output",
       "class": "array:file"
     }
   ],
