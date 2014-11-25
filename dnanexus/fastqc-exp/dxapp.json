@@ -1,0 +1,66 @@
+{
+  "name": "fastqc-exp",
+  "title": "FastQC-exp",
+  "summary": "Get fastq files for an experiment and run fastqc ENCODE Universal Pipelines",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "categories": [
+    "Encode"
+  ],
+  "inputSpec": [
+    {
+      "name": "accession",
+      "label": "Experiment Accession",
+      "class": "string",
+      "optional": false
+    },
+    {
+      "name": "key",
+      "label": "ENCODEd key for access (test, default, www)",
+      "class": "string",
+      "optional": true
+    },
+    {
+      "name": "debug",
+      "label": "debug",
+      "class": "boolean",
+      "optional": true
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "files",
+      "label": "fastq files",
+      "class": "array:file"
+    },
+    {
+      "name": "reports",
+      "label": "Full reports from FastQC",
+      "class": "array:file"
+    },
+    {
+      "name": "zips",
+      "label": "Zipped reports from FastQC",
+      "class": "array:file"
+    },
+    {
+      "name": "summaries",
+      "label": "Summaries of FastQC output",
+      "class": "array:file"
+    }
+  ],
+  "runSpec": {
+    "interpreter": "python2.7",
+    "file": "src/fastqc.py",
+    "execDepends": [
+      {"name":"openjdk-6-jre"},
+      {"name": "awscli", "package_manager": "pip"}
+    ]
+  },
+  "access": {
+    "network": [
+      "*"
+    ]
+  },
+  "authorizedUsers": []
+}
