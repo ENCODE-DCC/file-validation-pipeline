@@ -50,6 +50,11 @@ def encoded_get(url, AUTHID=None, AUTHPW=None):
         response = requests.get(url, headers=HEADERS)
     return response
 
+def find_or_create_folder(project, folder):
+    if folder in project.list_folder()['folders']:
+        return folder
+    else:
+        return project.new_folder(folder)
 
 @dxpy.entry_point("postprocess")
 def postprocess(reports):
@@ -61,6 +66,14 @@ def postprocess(reports):
     #for output in reports:
     #   pass
     return reports
+@dxpy.entry_point("noop")
+def noop(fastq):
+    return {
+        "report": None,
+        "summary": None,
+        "zip": None,
+        "file": fastq
+    }
 
 @dxpy.entry_point("process")
 def process(fastq):
@@ -122,15 +135,25 @@ def main(accession, key=None, debug=False):
 
     (AUTHID,AUTHPW,SERVER) = processkey(key)
 
-    url = SERVER + '/search/?type=experiment&accession=%s&format=json&frame=embedded&limit=all' %(accession)
-    #get the file object
+    url = SERVER + 'experiments/%s/format=json&frame=embedded' %(accession)
+    #get the experiment object
     response = encoded_get(url, AUTHID, AUTHPW)
     logger.debug(response)
 
-    #select your file
-    f_obj = response.json()['@graph'][0]
-    logger.debug(f_obj)
+    exp = response.json()
+    logger.debug(exp)
 
+    '''
+    Derive replicate structure and make directories
+    '''
+    project = dxpy.DXProject()  ## should be default
+    exp_folder = '/'+accession
+    f = find_or_create_folder(project, exp_folder)
+    for rep in exp.replicates:
+        rep_folder = "%s/%s_%s" % (exp_folder, rep.biological_replicate_number, rep.technical_replicate_number)
+        rf = find_or_create_folder(project, rep_folder)
+
+    '''
     #make the URL that will get redirected - get it from the file object's href property
     encode_url = urlparse.urljoin(SERVER,f_obj.get('href'))
     logger.debug(encode_url)
@@ -163,12 +186,12 @@ def main(accession, key=None, debug=False):
     #cp the file from the bucket
     subprocess.check_call(shlex.split('aws s3 cp %s . --quiet' %(bucket_url)), stderr=subprocess.STDOUT)
     subprocess.check_call(shlex.split('ls -l %s' %(filename)))
-
+    '''
 
     subjobs = []
     for fastq in files:
         subjob_input = { "fastq": fastq }
-        subjobs.append(dxpy.new_dxjob(subjob_input, "process"))
+        subjobs.append(dxpy.new_dxjob(subjob_input, "noop"))
 
     # The following line creates the job that will perform the
     # "postprocess" step of your app.  We've given it an input field
@@ -214,23 +237,12 @@ def main(accession, key=None, debug=False):
     # finished.
 
     output = {
+                "files": [subjob.get_output_ref("file") for subjob in subjobs],
                 "reports": [subjob.get_output_ref("report") for subjob in subjobs],
                 "summaries": [subjob.get_output_ref("summary") for subjob in subjobs],
                 "zips": [subjob.get_output_ref("zip") for subjob in subjobs],
     }
 
-    '''
-    for job in postprocess_job.get_output_ref("reports"):
-        item = dxpy.dxlink(job)
-        output['FastQC_reports'].append(item['report'])
-        output['FastQC_zip'].append(item['zip'])
-        output['FastQC_summary'].append(item['summary'])
-    '''
-
-#    output["FastQC_reports"] = [ dxpy.dxlink(item)  for item in FastQC_reports]
-#    output["FastQC_reports"] = FastQC_reports
-#    output["FastQC_zip"] = FastQC_zip
-#    output["FastQC_summary"] = FastQC_summary
 
     return output
 
