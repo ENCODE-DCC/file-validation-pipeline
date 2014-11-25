@@ -117,6 +117,7 @@ def process(file_obj, file_meta):
     print "Upload result"
     report_dxfile = dxpy.upload_local_file("%s.report" % filename)
     print report_dxfile
+    ## is_valid == 'Error count 0'
     return {
         "report": report_dxfile,
         "validation": valid
