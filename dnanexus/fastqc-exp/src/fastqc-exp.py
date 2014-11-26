@@ -131,7 +131,8 @@ def process(filename, bucket_url, project, folder):
         dx_file = dxpy.upload_local_file(filename, project=project, folder=folder)
 
     else:
-        dx_file = test[0]
+        dx_file = dxpy.download_dxfile(test[0]['id'], filename)
+
     reads_basename = filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
 
     subprocess.check_call(['mkdir', 'output'])
