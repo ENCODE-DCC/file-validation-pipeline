@@ -120,11 +120,18 @@ def process(filename, bucket_url, project, folder):
 
     logger.debug(filename)
 
-    #cp the file from the bucket
-    subprocess.check_call(shlex.split('aws s3 cp %s . --quiet' %(bucket_url)), stderr=subprocess.STDOUT)
-    subprocess.check_call(shlex.split('ls -l %s' %(filename)))
-    dx_file = dxpy.upload_local_file(filename, project=project, folder=folder)
+    test = list( dxpy.find_data_objects(classname='file',
+                           folder=folder, project=project, name_mode='exact',
+                           name=filename, return_handler=False) )
 
+    if not test or len(test) == 0:
+        #cp the file from the bucket
+        subprocess.check_call(shlex.split('aws s3 cp %s . --quiet' %(bucket_url)), stderr=subprocess.STDOUT)
+        subprocess.check_call(shlex.split('ls -l %s' %(filename)))
+        dx_file = dxpy.upload_local_file(filename, project=project, folder=folder)
+
+    else:
+        dx_file = test[0]
     reads_basename = filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
 
     subprocess.check_call(['mkdir', 'output'])
@@ -136,13 +143,12 @@ def process(filename, bucket_url, project, folder):
     logger.debug(subprocess.check_output(['ls','-l', 'output']))
     subprocess.check_call(['unzip', "output/%s_fastqc.zip" % reads_basename])
     logger.info("Upload results")
-    '''
+
     subprocess.check_call(['mv', 'fastq_fastqc/fastqc_data.txt', "%s_data.txt" % reads_basename])
     subprocess.check_call(['mv', 'fastq_fastqc/summary.txt', "%s_summary.txt" % reads_basename])
-    subprocess.check_call(['mv','output/fastq_fastqc.zip', "%s_fastqc.zip" % reads_basename])
-    '''
-    report_dxfile = dxpy.upload_local_file("output/%s_data.txt" % reads_basename, folder=folder, project=project)
-    summary_dxfile = dxpy.upload_local_file("output/%s_summary.txt" % reads_basename, folder=folder, project=project)
+
+    report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename, folder=folder, project=project)
+    summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename, folder=folder, project=project)
     zip_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_basename, folder=folder, project=project)
     logger.debug(report_dxfile)
     return {
