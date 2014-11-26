@@ -51,13 +51,14 @@
   ],
   "runSpec": {
     "interpreter": "python2.7",
-    "file": "src/fastqc.py",
+    "file": "src/fastqc-exp.py",
     "execDepends": [
       {"name":"openjdk-6-jre"},
       {"name": "awscli", "package_manager": "pip"}
     ]
   },
   "access": {
+    "project": "CONTRIBUTE",
     "network": [
       "*"
     ]

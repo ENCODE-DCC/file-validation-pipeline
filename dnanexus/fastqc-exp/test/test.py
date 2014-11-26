@@ -16,7 +16,8 @@ def makeInputs():
     # Please fill in this method to generate default inputs for your app.
     return {
         "accession": "ENCSR000AJJ",
-        "debug": True
+        "debug": True,
+        "key": 'www'
     }
 
 
