@@ -15,7 +15,7 @@ test_resources_dir = os.path.join(src_dir, "test", "resources")
 def makeInputs():
     # Please fill in this method to generate default inputs for your app.
     return {
-        "accession": "ENCSR000AJJ",
+        "accession": "ENCSR000CYA",
         "debug": True,
         "key": 'www'
     }
