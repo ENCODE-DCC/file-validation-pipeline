@@ -145,8 +145,8 @@ def process(filename, bucket_url, project, folder):
     subprocess.check_call(['unzip', "output/%s_fastqc.zip" % reads_basename])
     logger.info("Upload results")
 
-    subprocess.check_call(['mv', 'fastq_fastqc/fastqc_data.txt', "%s_data.txt" % reads_basename])
-    subprocess.check_call(['mv', 'fastq_fastqc/summary.txt', "%s_summary.txt" % reads_basename])
+    subprocess.check_call(['mv', "%s_fastqc/fastqc_data.txt" % reads_basename, "%s_data.txt" % reads_basename ])
+    subprocess.check_call(['mv', "%s_fastqc/summary.txt" % reads_basename, "%s_summary.txt" % reads_basename ])
 
     report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename, folder=folder, project=project)
     summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename, folder=folder, project=project)
