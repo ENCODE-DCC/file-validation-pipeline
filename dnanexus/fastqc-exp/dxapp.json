@@ -18,7 +18,8 @@
       "name": "key",
       "label": "ENCODEd key for access (test, default, www)",
       "class": "string",
-      "optional": true
+      "optional": true,
+      "default": "default"
     },
     {
       "name": "debug",

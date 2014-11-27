@@ -191,7 +191,9 @@ def main(accession, key=None, debug=False):
     logger.debug(response)
 
     exp = response.json()
+    reps = exp.get('replicates')
     # for some reason cannot write exp json to STDERR/logger
+    logger.debug(reps or "No replicates")
 
     '''
     Derive replicate structure and make directories
@@ -205,19 +207,21 @@ def main(accession, key=None, debug=False):
 
 
     subjobs = []
-    for ff in exp['files']:
-        if ff['file_format'] == 'fastq':
-            folder = "/%s/%s_%s" % (exp_folder,
-                ff['replicate']['biological_replicate_number'],
-                ff['replicate']['technical_replicate_number'])
-            file_name, bucket_url = get_bucket(SERVER, AUTHID, AUTHPW, ff)
-            subjob_input = {
-                "filename": file_name,
-                "bucket_url": bucket_url,
-                "project": project.get_id(),
-                "folder": folder
-            }
-            subjobs.append(dxpy.new_dxjob(subjob_input, "process"))
+    files = exp.get('files')
+    if reps and files:
+        for ff in files:
+            if ff['file_format'] == 'fastq':
+                folder = "/%s/%s_%s" % (exp_folder,
+                    ff['replicate']['biological_replicate_number'],
+                    ff['replicate']['technical_replicate_number'])
+                file_name, bucket_url = get_bucket(SERVER, AUTHID, AUTHPW, ff)
+                subjob_input = {
+                    "filename": file_name,
+                    "bucket_url": bucket_url,
+                    "project": project.get_id(),
+                    "folder": folder
+                }
+                subjobs.append(dxpy.new_dxjob(subjob_input, "process"))
 
     # The following line creates the job that will perform the
     # "postprocess" step of your app.  We've given it an input field
