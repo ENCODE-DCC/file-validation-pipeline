@@ -19,7 +19,7 @@ import dxpy
 KEYFILE = 'keypairs.json'
 DEFAULT_SERVER = 'https://www.encodeproject.org'
 S3_SERVER='s3://encode-files/'
-ROOT_FOLDER='runs'
+ROOT_FOLDER='/runs'
 
 logger = logging.getLogger("Applet")
 
@@ -200,12 +200,13 @@ def main(accession, key=None, debug=False):
     Derive replicate structure and make directories
     '''
     project = dxpy.DXProject(os.environ['DX_PROJECT_CONTEXT_ID'])  ## should be default
-    exp_folder = accession
-    rf = find_or_create_folder(project, ROOT_FOLDER)
-    f = find_or_create_folder(project, exp_folder, root_folder='/'+ROOT_FOLDER)
+    exp_folder = "%s/%s" % (ROOT_FOLDER, accession)
+    #rf = find_or_create_folder(project, ROOT_FOLDER)
+    #project.new_fo
+    #f = find_or_create_folder(project, exp_folder, root_folder='/'+ROOT_FOLDER)
     for rep in exp['replicates']:
-        rep_folder = "/rep%s_%s" % (rep['biological_replicate_number'], rep['technical_replicate_number'])
-        rf = find_or_create_folder(project, rep_folder, root_folder=ROOT_FOLDER+'/'+exp_folder)
+        rep_folder = "%s/rep%s_%s" % (exp_folder, rep['biological_replicate_number'], rep['technical_replicate_number'])
+        project.new_folder(rep_folder, parents=True)
 
 
     subjobs = []
@@ -213,7 +214,7 @@ def main(accession, key=None, debug=False):
     if reps and files:
         for ff in files:
             if ff['file_format'] == 'fastq':
-                folder = "/%s/rep%s_%s" % (exp_folder,
+                folder = "%s/rep%s_%s" % (exp_folder,
                     ff['replicate']['biological_replicate_number'],
                     ff['replicate']['technical_replicate_number'])
                 file_name, bucket_url = get_bucket(SERVER, AUTHID, AUTHPW, ff)
