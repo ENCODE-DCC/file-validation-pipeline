@@ -129,7 +129,7 @@ def process(filename, bucket_url, project, folder):
         #cp the file from the bucket
         subprocess.check_call(shlex.split('aws s3 cp %s . --quiet' %(bucket_url)), stderr=subprocess.STDOUT)
         subprocess.check_call(shlex.split('ls -l %s' %(filename)))
-        dx_file = dxpy.upload_local_file(filename, folder=folder)
+        dx_file = dxpy.upload_local_file(filename, project=project, folder=folder)
 
     else:
         dxpy.download_dxfile(test[0]['id'], filename)
@@ -149,9 +149,9 @@ def process(filename, bucket_url, project, folder):
     subprocess.check_call(['mv', "%s_fastqc/fastqc_data.txt" % reads_basename, "%s_data.txt" % reads_basename ])
     subprocess.check_call(['mv', "%s_fastqc/summary.txt" % reads_basename, "%s_summary.txt" % reads_basename ])
 
-    report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename, folder=folder)
-    summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename, folder=folder)
-    zip_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_basename, folder=folder)
+    report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename, folder=folder, project=project)
+    summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename, folder=folder, project=project)
+    zip_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_basename, folder=folder, project=project)
     logger.debug(report_dxfile)
     return {
         "file": dx_file,
