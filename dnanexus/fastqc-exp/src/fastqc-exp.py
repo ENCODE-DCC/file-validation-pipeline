@@ -19,6 +19,7 @@ import dxpy
 KEYFILE = 'keypairs.json'
 DEFAULT_SERVER = 'https://www.encodeproject.org'
 S3_SERVER='s3://encode-files/'
+ROOT_FOLDER='runs'
 
 logger = logging.getLogger("Applet")
 
@@ -128,11 +129,11 @@ def process(filename, bucket_url, project, folder):
         #cp the file from the bucket
         subprocess.check_call(shlex.split('aws s3 cp %s . --quiet' %(bucket_url)), stderr=subprocess.STDOUT)
         subprocess.check_call(shlex.split('ls -l %s' %(filename)))
-        dx_file = dxpy.upload_local_file(filename, project=project, folder=folder)
+        dx_file = dxpy.upload_local_file(filename, folder=folder)
 
     else:
-        dx_file = dxpy.download_dxfile(test[0]['id'], filename)
-
+        dxpy.download_dxfile(test[0]['id'], filename)
+        dx_file=dxpy.dxfile.DXFile(test[0]['id'])
     reads_basename = filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
 
     subprocess.check_call(['mkdir', 'output'])
@@ -148,9 +149,9 @@ def process(filename, bucket_url, project, folder):
     subprocess.check_call(['mv', "%s_fastqc/fastqc_data.txt" % reads_basename, "%s_data.txt" % reads_basename ])
     subprocess.check_call(['mv', "%s_fastqc/summary.txt" % reads_basename, "%s_summary.txt" % reads_basename ])
 
-    report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename, folder=folder, project=project)
-    summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename, folder=folder, project=project)
-    zip_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_basename, folder=folder, project=project)
+    report_dxfile = dxpy.upload_local_file("%s_data.txt" % reads_basename, folder=folder)
+    summary_dxfile = dxpy.upload_local_file("%s_summary.txt" % reads_basename, folder=folder)
+    zip_dxfile = dxpy.upload_local_file("output/%s_fastqc.zip" % reads_basename, folder=folder)
     logger.debug(report_dxfile)
     return {
         "file": dx_file,
@@ -200,10 +201,11 @@ def main(accession, key=None, debug=False):
     '''
     project = dxpy.DXProject(os.environ['DX_PROJECT_CONTEXT_ID'])  ## should be default
     exp_folder = accession
-    f = find_or_create_folder(project, exp_folder)
+    rf = find_or_create_folder(project, ROOT_FOLDER)
+    f = find_or_create_folder(project, exp_folder, root_folder='/'+ROOT_FOLDER)
     for rep in exp['replicates']:
-        rep_folder = "/%s_%s" % (rep['biological_replicate_number'], rep['technical_replicate_number'])
-        rf = find_or_create_folder(project, rep_folder, root_folder='/'+exp_folder)
+        rep_folder = "/rep%s_%s" % (rep['biological_replicate_number'], rep['technical_replicate_number'])
+        rf = find_or_create_folder(project, rep_folder, root_folder=ROOT_FOLDER+'/'+exp_folder)
 
 
     subjobs = []
@@ -211,7 +213,7 @@ def main(accession, key=None, debug=False):
     if reps and files:
         for ff in files:
             if ff['file_format'] == 'fastq':
-                folder = "/%s/%s_%s" % (exp_folder,
+                folder = "/%s/rep%s_%s" % (exp_folder,
                     ff['replicate']['biological_replicate_number'],
                     ff['replicate']['technical_replicate_number'])
                 file_name, bucket_url = get_bucket(SERVER, AUTHID, AUTHPW, ff)
