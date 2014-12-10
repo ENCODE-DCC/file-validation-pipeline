@@ -24,7 +24,7 @@ def makeInputs():
         },
         "file_meta": {
             "dataset": "ENCSR765JPC",
-            "file_format": "bedMethyl",
+            "file_format": "bed_bedMethyl",
             "output_type": "methyl CG",
             "lab": '/labs/richard-myers/',
             "award": '/awards/U54HG006998/',

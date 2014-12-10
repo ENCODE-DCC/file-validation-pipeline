@@ -54,6 +54,7 @@
           "name":"dxencode",
           "package_manager": "git",
           "url": "https://github.com/ENCODE-DCC/dxencode.git",
+          "destdir": "/home/dnanexus",
           "tag": "dname_testing"
       },
       {"name": "awscli", "package_manager": "pip"}
