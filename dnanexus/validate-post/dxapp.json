@@ -1,0 +1,69 @@
+{
+  "name": "validate-post",
+  "title": "Validate and Post files",
+  "summary": "Validate ENCODED pipeline files and POST to encodeD",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "categories": [
+    "Encode"
+  ],
+  "inputSpec": [
+    {
+      "name": "pipe_file",
+      "label": "File to validate",
+      "class": "file",
+      "optional": false
+    },
+    {
+      "name": "file_obj_template",
+      "label": "encodeD file object to post",
+      "class": "hash",
+      "optional": false
+    },
+    {
+      "name": "key",
+      "label": "ENCODEd key for access (test, default, www)",
+      "class": "string",
+      "optional": true,
+      "default": "default"
+    },
+    {
+      "name": "debug",
+      "label": "debug",
+      "class": "boolean",
+      "optional": true
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "validate_reports",
+      "label": "validateFiles report",
+      "class": "file"
+    },
+    {
+      "name": "validate_errors",
+      "label": "validation errors",
+      "class": "string"
+    }
+  ],
+  "runSpec": {
+    "interpreter": "python2.7",
+    "file": "src/validate-post.py",
+    "execDepends": [
+      {
+          "name":"dxencode",
+          "package_manager": "git",
+          "url": "https://github.com/ENCODE-DCC/dxencode.git",
+          "tag": "dname_testing",
+      },
+      {"name": "awscli", "package_manager": "pip"}
+    ]
+  },
+  "access": {
+    "project": "CONTRIBUTE",
+    "network": [
+      "*"
+    ]
+  },
+  "authorizedUsers": []
+}
