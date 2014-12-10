@@ -15,7 +15,14 @@ test_resources_dir = os.path.join(src_dir, "test", "resources")
 def makeInputs():
     # Please fill in this method to generate default inputs for your app.
     return {
-        "accession": "ENCSR000CYA",
+        "file": { "$dxlink": "file-blahdeblah" },
+        "file_object_template": {
+            "dataset": "ENCSR765JPC",
+            "file_format": "bedMethyl",
+            "output_type": "methyl CG",
+            "lab": '/labs/richard-myers/',
+            "award": '/awards/U54HG006998/',
+        },
         "debug": True,
         "key": 'www'
     }

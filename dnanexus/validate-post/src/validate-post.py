@@ -19,11 +19,66 @@ from dxencode import dxencode as dxencode
 
 logger = logging.getLogger("Applet")
 
+'''
+        {
+            "dataset": "ENCSR000ACY",
+            "file_format": "fastq",
+            "file_size": os.path.getsize(path),
+            "md5sum": md5sum.hexdigest(),
+            "output_type": "raw data",
+            "submitted_file_name": path,
+            "lab": my_lab,
+            "award": my_award
+        }
+'''
 
+def validate(filename, file_meta):
+    # Change the following to process whatever input this stage
+    # receives.  You may also want to copy and paste the logic to download
+    # and upload files here as well if this stage receives file input
+    # and/or makes file output.
 
+    logger.debug(file_meta)
+
+    logger.debug("Run Validate Files on %s" % filename)
+    validate_args = validate_map.get(file_meta['file_format'])
+    assembly = file_meta.get('assembly')
+    if assembly:
+        chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly)]
+    else:
+        chromInfo = ['-chromInfo=%s/hg19/chrom.sizes' % encValData]
+
+    print subprocess.check_output(['ls','-l'])
+    valid = "Not validated yet"
+    if validate_args is not None:
+        logger.debug(("Validating file."))
+        validation_command = ['validateFiles'] + ['-verbose=2'] + validate_args + chromInfo + ['-doReport'] + [filename]
+        try:
+            logger.debug( " ".join(validation_command) )
+            valid = subprocess.check_output(validation_command)
+        except subprocess.CalledProcessError as e:
+            pass
+            logger.debug((e.output))
+
+    else:
+        return {
+            "report": None,
+            "validation": "Not Run for type: " % file_meta['file_format']
+        }
+
+    logger.debug(valid)
+    print subprocess.check_output(['ls','-l'])
+    logger.debug("Upload result")
+    report_dxfile = dxpy.upload_local_file("%s.report" % filename)
+    logger.debug(report_dxfile)
+    ## is_valid == 'Error count 0'
+    return {
+        "report": report_dxfile,
+        "validation": valid
+    }
 
 @dxpy.entry_point("main")
-def main(pipe_file, file_object_template, key=None, debug=False):
+def main(pipe_file, file_meta, key=None, debug=False):
 
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
@@ -47,8 +102,18 @@ def main(pipe_file, file_object_template, key=None, debug=False):
 
     (AUTHID,AUTHPW,SERVER) = dxencode.processkey(key)
 
+    filename = dxpy.describe(pipe_file)['name']
+    dx_file = dxpy.download_dxfile(pipe_file, filename)
 
-    file_name, bucket_url = dxencode.get_bucket(SERVER, AUTHID, AUTHPW, f_obj )
+    file_meta['path'] = filename
+    file_meta['md5sum'] = dxencode.calc_md5(filename).digest()
+    file_meta['file_size'] = os.path.getsize(filename)
+
+    v = validate(filename, file_meta)
+    if v['valid'] == 'Error count 0':
+
+        print("Submitting metadata.")
+        dxencode.encoded_post_file(file_meta)
 
 
     # The following line creates the job that will perform the
