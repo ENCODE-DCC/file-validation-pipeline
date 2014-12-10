@@ -139,18 +139,18 @@ def main(pipe_file, file_meta, key=None, debug=False):
     dx_file = dxpy.download_dxfile(pipe_file, filename)
 
     file_meta['path'] = filename
-    file_meta['md5sum'] = dxencode.calc_md5(filename).digest()
+    file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
     file_meta['file_size'] = os.path.getsize(filename)
 
     v = validate(filename, file_meta)
-    if v['valid'] == 'Error count 0':
+    if v['validation'] == "Error count 0\n":   ## yes with CR
 
         print("Submitting metadata.")
         f_obj = dxencode.encoded_post_file(file_meta, SERVER, AUTHID, AUTHPW)
         logger.info(json.dumps(f_obj, indent=4, sort_keys=True))
 
     else:
-        print "File invalid: %s" % v['valid']
+        print "File invalid: %s" % v['validation']
 
 
     # The following line creates the job that will perform the

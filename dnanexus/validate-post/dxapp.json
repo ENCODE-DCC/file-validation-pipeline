@@ -36,12 +36,12 @@
   ],
   "outputSpec": [
     {
-      "name": "validate_reports",
+      "name": "report",
       "label": "validateFiles report",
       "class": "file"
     },
     {
-      "name": "validate_errors",
+      "name": "validation",
       "label": "validation errors",
       "class": "string"
     }
