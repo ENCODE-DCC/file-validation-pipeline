@@ -15,6 +15,10 @@
 
 import sys, os, subprocess, json, requests, shlex, urlparse, logging
 import dxpy
+
+print sys.path
+print subprocess.check_output(['ls','-l'])
+
 from dxencode import dxencode as dxencode
 
 logger = logging.getLogger("Applet")
@@ -113,7 +117,11 @@ def main(pipe_file, file_meta, key=None, debug=False):
     if v['valid'] == 'Error count 0':
 
         print("Submitting metadata.")
-        dxencode.encoded_post_file(file_meta)
+        f_obj = dxencode.encoded_post_file(file_meta, SERVER, AUTHID, AUTHPW)
+        logger.info(json.dumps(f_obj, indent=4, sort_keys=True))
+
+    else:
+        print "File invalid: %s" % v['valid']
 
 
     # The following line creates the job that will perform the
@@ -150,10 +158,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
     # output into the parent container only after all subjobs have
     # finished.
 
-    output = {
-    }
 
-
-    return output
+    return v
 
 dxpy.run()

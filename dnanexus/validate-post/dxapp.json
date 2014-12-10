@@ -15,7 +15,7 @@
       "optional": false
     },
     {
-      "name": "file_obj_template",
+      "name": "file_meta",
       "label": "encodeD file object to post",
       "class": "hash",
       "optional": false
@@ -54,7 +54,7 @@
           "name":"dxencode",
           "package_manager": "git",
           "url": "https://github.com/ENCODE-DCC/dxencode.git",
-          "tag": "dname_testing",
+          "tag": "dname_testing"
       },
       {"name": "awscli", "package_manager": "pip"}
     ]
