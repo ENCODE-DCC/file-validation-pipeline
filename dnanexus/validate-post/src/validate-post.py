@@ -138,7 +138,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
     filename = dxpy.describe(pipe_file)['name']
     dx_file = dxpy.download_dxfile(pipe_file, filename)
 
-    file_meta['path'] = filename
+    file_meta['submitted_file_name'] = filename
     file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
     file_meta['file_size'] = os.path.getsize(filename)
 

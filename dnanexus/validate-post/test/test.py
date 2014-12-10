@@ -15,6 +15,7 @@ test_resources_dir = os.path.join(src_dir, "test", "resources")
 def makeInputs():
     # Please fill in this method to generate default inputs for your app.
     return {
+    ## note methyl_CG -> methyl CG
         "pipe_file":  {
             "$dnanexus_link":
                     {
@@ -25,7 +26,7 @@ def makeInputs():
         "file_meta": {
             "dataset": "ENCSR765JPC",
             "file_format": "bed_bedMethyl",
-            "output_type": "methyl CG",
+            "output_type": "methyl_CG",
             "lab": '/labs/richard-myers/',
             "award": '/awards/U54HG006998/',
         },
