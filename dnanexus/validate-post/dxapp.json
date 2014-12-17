@@ -41,6 +41,11 @@
       "class": "file"
     },
     {
+      "name": "accession",
+      "label": "new file accession",
+      "class": "string"
+    }
+    {
       "name": "validation",
       "label": "validation errors",
       "class": "string"
@@ -55,7 +60,7 @@
           "package_manager": "git",
           "url": "https://github.com/ENCODE-DCC/dxencode.git",
           "destdir": "/home/dnanexus",
-          "tag": "dname_testing"
+          "tag": "submit"
       },
       {"name": "awscli", "package_manager": "pip"}
     ]

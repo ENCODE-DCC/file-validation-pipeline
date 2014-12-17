@@ -19,12 +19,12 @@ def makeInputs():
             "$dnanexus_link":
                     {
                       "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
-                      "id": "file-BVvVzZj0fp5VxK0vfQJv0BB9"
+                      "id": "file-BVvVvB80fp5VxK0vfQJv0B66"
                     }
         },
         "file_meta": {
             "dataset": "ENCSR765JPC",
-            "file_format": "bedMethyl",
+            "file_format": "bed_bedMethyl",
             "output_type": "methyl CG",
             "lab": '/labs/richard-myers/',
             "award": '/awards/U54HG006998/',
@@ -49,7 +49,23 @@ def makeInputs():
         },
         "debug": True,
         "key": 'test'
-    }
+    BAM
+            "pipe_file":  {
+            "$dnanexus_link":
+                    {
+                      "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
+                      "id": "file-BVvVzZj0fp5VxK0vfQJv0BB9"
+                    }
+        },
+        "file_meta": {
+            "dataset": "ENCSR765JPC",
+            "file_format": "bedMethyl",
+            "output_type": "methyl CG",
+            "lab": '/labs/richard-myers/',
+            "award": '/awards/U54HG006998/',
+        },
+        "debug": True,
+        "key": 'test'
     '''
 
 class Testfastqc(unittest.TestCase):

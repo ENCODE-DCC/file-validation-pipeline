@@ -135,10 +135,11 @@ def main(pipe_file, file_meta, key=None, debug=False):
 
     (AUTHID,AUTHPW,SERVER) = dxencode.processkey(key)
 
-    filename = dxpy.describe(pipe_file)['name']
+    f_des = dxpy.describe(pipe_file)
+    filename = f_des['name']
     dx_file = dxpy.download_dxfile(pipe_file, filename)
 
-    file_meta['submitted_file_name'] = filename
+    file_meta['submitted_file_name'] = "%s/%s" % (f_des['folder'], filename)
     file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
     file_meta['file_size'] = os.path.getsize(filename)
 
@@ -148,6 +149,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
         print("Submitting metadata.")
         f_obj = dxencode.encoded_post_file(file_meta, SERVER, AUTHID, AUTHPW)
         logger.info(json.dumps(f_obj, indent=4, sort_keys=True))
+        v['accession'] = f_obj['accession']
 
     else:
         print "File invalid: %s" % v['validation']
