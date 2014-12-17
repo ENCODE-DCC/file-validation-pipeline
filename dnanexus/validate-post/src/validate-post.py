@@ -139,6 +139,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
     filename = f_des['name']
     dx_file = dxpy.download_dxfile(pipe_file, filename)
 
+    print "Validating: %s (%s)" % (filename, f_des['folder'])
     file_meta['submitted_file_name'] = "%s/%s" % (f_des['folder'], filename)
     file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
     file_meta['file_size'] = os.path.getsize(filename)
@@ -153,6 +154,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
 
     else:
         print "File invalid: %s" % v['validation']
+        v['accession'] = None
 
 
     # The following line creates the job that will perform the
