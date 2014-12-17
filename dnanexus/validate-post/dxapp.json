@@ -44,7 +44,7 @@
       "name": "accession",
       "label": "new file accession",
       "class": "string"
-    }
+    },
     {
       "name": "validation",
       "label": "validation errors",
