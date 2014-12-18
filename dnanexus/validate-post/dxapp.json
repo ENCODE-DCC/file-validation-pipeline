@@ -38,7 +38,8 @@
     {
       "name": "report",
       "label": "validateFiles report",
-      "class": "file"
+      "class": "file",
+      "optional": true
     },
     {
       "name": "accession",

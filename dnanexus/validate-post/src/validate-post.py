@@ -95,8 +95,7 @@ def validate(filename, file_meta):
 
     else:
         return {
-            "report": None,
-            "validation": "Not Run for type: " % file_meta['file_format']
+            "validation": "Not Run for type: %s" % file_meta['file_format']
         }
 
     logger.debug(valid)
@@ -147,7 +146,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
     file_meta['file_size'] = os.path.getsize(filename)
 
     v = validate(filename, file_meta)
-    if v['validation'] == "Error count 0\n":   ## yes with CR
+    if v['validation'] == "Error count 0\n" or v['validation'].find('Not Run') == 0:   ## yes with CR
 
         print("Submitting metadata.")
         f_obj = dxencode.encoded_post_file(file_meta, SERVER, AUTHID, AUTHPW)
@@ -156,7 +155,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
 
     else:
         print "File invalid: %s" % v['validation']
-        v['accession'] = None
+        v['accession'] = "NOT POSTED"
 
 
     # The following line creates the job that will perform the
