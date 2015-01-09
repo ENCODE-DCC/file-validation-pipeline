@@ -1,0 +1,52 @@
+{
+  "name": "aws-cp-encoded",
+  "title": "Copy Dx files in encoded to AWS",
+  "summary": "Copy existing files from DX to AWS",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "categories": [
+    "Encode"
+  ],
+  "inputSpec": [
+    {
+      "name": "accession",
+      "label": "Experiment Accession",
+      "class": "string",
+      "optional": false
+    },
+    {
+      "name": "key",
+      "label": "ENCODEd key for access (test, default, www)",
+      "class": "string",
+      "optional": true,
+      "default": "default"
+    },
+    {
+      "name": "debug",
+      "label": "debug",
+      "class": "boolean",
+      "optional": true
+    }
+  ],
+  "runSpec": {
+    "interpreter": "python2.7",
+    "file": "src/aws-cp-encoded.py",
+    "execDepends": [
+      {
+          "name":"dxencode",
+          "package_manager": "git",
+          "url": "https://github.com/ENCODE-DCC/dxencode.git",
+          "destdir": "/home/dnanexus",
+          "tag": "submit"
+      },
+      {"name": "awscli", "package_manager": "pip"}
+    ]
+  },
+  "access": {
+    "project": "CONTRIBUTE",
+    "network": [
+      "*"
+    ]
+  },
+  "authorizedUsers": []
+}
