@@ -149,7 +149,7 @@ def main(pipe_file, file_meta, key=None, debug=False):
     if v['validation'] == "Error count 0\n" or v['validation'].find('Not Run') == 0:   ## yes with CR
 
         print("Submitting metadata.")
-        f_obj = dxencode.encoded_post_file(file_meta, SERVER, AUTHID, AUTHPW)
+        f_obj = dxencode.encoded_post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
         logger.info(json.dumps(f_obj, indent=4, sort_keys=True))
         v['accession'] = f_obj['accession']
 
