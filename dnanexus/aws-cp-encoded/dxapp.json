@@ -43,7 +43,7 @@
     ]
   },
   "access": {
-    "project": "CONTRIBUTE",
+    "allProjects": "VIEW",
     "network": [
       "*"
     ]

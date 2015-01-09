@@ -1,4 +1,4 @@
-# validate-post Developer Readme
+# AWS cp encodeD (DNAnexus Platform App)
 
 <!--
 TODO: Please edit this Readme.developer.md file to include information

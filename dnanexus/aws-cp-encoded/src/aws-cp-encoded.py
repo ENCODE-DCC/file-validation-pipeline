@@ -15,6 +15,7 @@
 
 import sys, os, subprocess, json, requests, shlex, urlparse, logging
 import dxpy
+import json
 
 print sys.path
 print subprocess.check_output(['ls','-l'])
@@ -23,94 +24,10 @@ from dxencode import dxencode as dxencode
 
 logger = logging.getLogger("Applet")
 
-'''
-        {
-            "dataset": "ENCSR000ACY",
-            "file_format": "fastq",
-            "file_size": os.path.getsize(path),
-            "md5sum": md5sum.hexdigest(),
-            "output_type": "raw data",
-            "submitted_file_name": path,
-            "lab": my_lab,
-            "award": my_award
-        }
-'''
 root_dir = os.environ.get('DX_FS_ROOT') or ""
-DATA = root_dir+"/opt/data/"
-encValData  = DATA+'encValData'
-validate_map = {
-    'bam': ['-type=bam'],
-    'bed': ['-type=bed6+'],  # if this fails we will drop to bed3+
-    'bedLogR': ['-type=bigBed9+1', '-as=%s/as/bedLogR.as' % encValData],
-    'bed_bedLogR': ['-type=bed9+1', '-as=%s/as/bedLogR.as' % encValData],
-    'bedMethyl': ['-type=bigBed9+2', '-as=%s/as/bedMethyl.as' % encValData],
-    'bed_bedMethyl': ['-type=bed9+2', '-as=%s/as/bedMethyl.as' % encValData],
-    'bigBed': ['-type=bigBed6+'],  # if this fails we will drop to bigBed3+
-    'bigWig': ['-type=bigWig'],
-    'broadPeak': ['-type=bigBed6+3', '-as=%s/as/broadPeak.as' % encValData],
-    'bed_broadPeak': ['-type=bed6+3', '-as=%s/as/broadPeak.as' % encValData],
-    'fasta': ['-type=fasta'],
-    'fastq': ['-type=fastq'],
-    'gtf': None,
-    'idat': ['-type=idat'],
-    'narrowPeak': ['-type=bigBed6+4', '-as=%s/as/narrowPeak.as' % encValData],
-    'bed_narrowPeak': ['-type=bed6+4', '-as=%s/as/narrowPeak.as' % encValData],
-    'rcc': ['-type=rcc'],
-    'tar': None,
-    'tsv': None,
-    '2bit': None,
-    'csfasta': ['-type=csfasta'],
-    'csqual': ['-type=csqual'],
-    'bedRnaElements': ['-type=bed6+3', '-as=%s/as/bedRnaElements.as' % encValData],
-    'CEL': None,
-}
-
-def validate(filename, file_meta):
-    # Change the following to process whatever input this stage
-    # receives.  You may also want to copy and paste the logic to download
-    # and upload files here as well if this stage receives file input
-    # and/or makes file output.
-
-    logger.debug(file_meta)
-
-    logger.debug("Run Validate Files on %s" % filename)
-    validate_args = validate_map.get(file_meta['file_format'])
-    assembly = file_meta.get('assembly')
-    if assembly:
-        chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly)]
-    else:
-        chromInfo = ['-chromInfo=%s/hg19/chrom.sizes' % encValData]
-
-    print subprocess.check_output(['ls','-l'])
-    valid = "Not validated yet"
-    if validate_args is not None:
-        logger.debug(("Validating file."))
-        validation_command = ['validateFiles'] + validate_args + chromInfo + ['-doReport'] + [filename]
-        try:
-            logger.debug( " ".join(validation_command) )
-            valid = subprocess.check_output(validation_command)
-        except subprocess.CalledProcessError as e:
-            pass
-            logger.debug((e.output))
-
-    else:
-        return {
-            "validation": "Not Run for type: %s" % file_meta['file_format']
-        }
-
-    logger.debug(valid)
-    print subprocess.check_output(['ls','-l'])
-    logger.debug("Upload result")
-    report_dxfile = dxpy.upload_local_file("%s.report" % filename)
-    logger.debug(report_dxfile)
-    ## is_valid == 'Error count 0'
-    return {
-        "report": report_dxfile,
-        "validation": valid
-    }
 
 @dxpy.entry_point("main")
-def main(pipe_file, file_meta, key=None, debug=False):
+def main(accession, key=None, debug=False):
 
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
@@ -134,28 +51,30 @@ def main(pipe_file, file_meta, key=None, debug=False):
 
     (AUTHID,AUTHPW,SERVER) = dxencode.processkey(key)
 
-    f_des = dxpy.describe(pipe_file)
-    filename = f_des['name']
-    fid = f_des['id']
-    folder = dxpy.DXFile(fid, project=dxpy.PROJECT_CONTEXT_ID).folder
-    dx_file = dxpy.download_dxfile(pipe_file, filename)
+    url = SERVER + 'experiments/%s/?format=json&frame=embedded' %(accession)
+    #get the experiment object
+    logger.debug("%s - %s" % (url, AUTHID))
+    response = dxencode.encoded_get(url, AUTHID, AUTHPW)
+    logger.debug(response)
 
-    print "Validating: %s (%s)" % (filename, folder)
-    file_meta['submitted_file_name'] = "%s/%s" % (folder, filename)
-    file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
-    file_meta['file_size'] = os.path.getsize(filename)
+    exp = response.json()
 
-    v = validate(filename, file_meta)
-    if v['validation'] == "Error count 0\n" or v['validation'].find('Not Run') == 0:   ## yes with CR
+    for ff in exp.get('files', []):
+        if ff['status'] != 'uploading':
+            continue
+        try:
+            fr = dxencode.encoded_get(SERVER+ff['@id'], AUTHID, AUTHPW)
+            notes = json.loads(fr.json()['notes'])
+            dxid = notes['dx-id']
+        except Exception, e:
+            logger.error("Error getting dx id: %s for %s" % (e, ff['accession']))
+            continue
 
-        print("Submitting metadata.")
-        f_obj = dxencode.encoded_post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
-        logger.info(json.dumps(f_obj, indent=4, sort_keys=True))
-        v['accession'] = f_obj['accession']
-
-    else:
-        print "File invalid: %s" % v['validation']
-        v['accession'] = "NOT POSTED"
+        dx_file = dxpy.DXFile(dxid)
+        local_file = dx_file.describe()['name']
+        dxpy.download_dxfile(dxid, local_file)
+        item = dxencode.encoded_upload_existing(local_file, ff['accession'], SERVER, AUTHID, AUTHPW)
+        print item
 
 
     # The following line creates the job that will perform the
@@ -192,7 +111,5 @@ def main(pipe_file, file_meta, key=None, debug=False):
     # output into the parent container only after all subjobs have
     # finished.
 
-
-    return v
 
 dxpy.run()
