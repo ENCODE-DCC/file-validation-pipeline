@@ -32,6 +32,12 @@
       "label": "debug",
       "class": "boolean",
       "optional": true
+    },
+    {
+      "name": "skipvalidate",
+      "label": "Skip Validation (careful!)",
+      "class": "boolean",
+      "optional": false
     }
   ],
   "outputSpec": [

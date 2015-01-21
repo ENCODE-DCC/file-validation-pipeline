@@ -110,7 +110,7 @@ def validate(filename, file_meta):
     }
 
 @dxpy.entry_point("main")
-def main(pipe_file, file_meta, key=None, debug=False):
+def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
 
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
@@ -140,12 +140,16 @@ def main(pipe_file, file_meta, key=None, debug=False):
     folder = dxpy.DXFile(fid, project=dxpy.PROJECT_CONTEXT_ID).folder
     dx_file = dxpy.download_dxfile(pipe_file, filename)
 
-    print "Validating: %s (%s)" % (filename, folder)
     file_meta['submitted_file_name'] = "%s/%s" % (folder, filename)
     file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
     file_meta['file_size'] = os.path.getsize(filename)
 
-    v = validate(filename, file_meta)
+    if not skipvalidate:
+        print "Validating: %s (%s)" % (filename, folder)
+        v = validate(filename, file_meta)
+    else:
+        v = { 'validation': 'Not Run' }
+
     if v['validation'] == "Error count 0\n" or v['validation'].find('Not Run') == 0:   ## yes with CR
 
         print("Submitting metadata.")

@@ -30,7 +30,8 @@ def makeInputs():
             "award": '/awards/U54HG006998/',
         },
         "debug": True,
-        "key": 'test'
+        "key": 'test',
+        "skipvalidate": False
     }
     ''' BED
         "pipe_file":  {
@@ -65,7 +66,8 @@ def makeInputs():
             "award": '/awards/U54HG006998/',
         },
         "debug": True,
-        "key": 'test'
+        "key": 'test',
+        "skipvalidate": True
     '''
 
 class TestvalidatePost(unittest.TestCase):
