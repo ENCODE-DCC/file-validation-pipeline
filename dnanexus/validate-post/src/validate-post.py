@@ -150,8 +150,8 @@ def main(pipe_file, file_meta, key=None, debug=False):
 
         print("Submitting metadata.")
         f_obj = dxencode.encoded_post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
+        v['accession'] = f_obj.get('accession', "NOT COPIED")
         logger.info(json.dumps(f_obj, indent=4, sort_keys=True))
-        v['accession'] = f_obj['accession']
 
     else:
         print "File invalid: %s" % v['validation']
