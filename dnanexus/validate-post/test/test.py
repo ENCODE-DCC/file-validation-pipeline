@@ -26,8 +26,8 @@ def makeInputs():
             "dataset": "ENCSR765JPC",
             "file_format": "bed_bedMethyl",
             "output_type": "methyl CG",
-            "lab": '/labs/richard-myers/',
-            "award": '/awards/U54HG006998/',
+            "lab": '/labs/j-michael-cherry/',
+            "award": '/awards/U41HG006992/'
         },
         "debug": True,
         "key": 'test',
@@ -45,8 +45,8 @@ def makeInputs():
             "dataset": "ENCSR765JPC",
             "file_format": "bed_bedMethyl",
             "output_type": "methyl CG",
-            "lab": '/labs/richard-myers/',
-            "award": '/awards/U54HG006998/',
+            "lab": '/labs/j-michael-cherry/',
+            "award":'/awards/U41HG006992/'
         },
         "debug": True,
         "key": 'test'
@@ -62,8 +62,8 @@ def makeInputs():
             "dataset": "ENCSR765JPC",
             "file_format": "bedMethyl",
             "output_type": "methyl CG",
-            "lab": '/labs/richard-myers/',
-            "award": '/awards/U54HG006998/',
+            "lab": '/labs/j-michael-cherry/',
+            "award":'/awards/U41HG006992/'
         },
         "debug": True,
         "key": 'test',
