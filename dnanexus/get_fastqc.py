@@ -2,6 +2,8 @@
 
 import dxpy
 import argparse
+import re
+import json
 from dxencode import dxencode as dxencode
 
 PROJECT_DEFAULT = 'long-rna-seq-pipeline'
@@ -50,9 +52,26 @@ def main():
     summary_link = dxencode.find_file(summary_fn, project.get_id())
     report_link = dxencode.find_file(report_fn, project.get_id())
 
-    print summary_link
-    print report_link
+    metrics = []
+    with dxpy.open_dxfile(report_link) as rfd:
+        total = re.compile('Total Sequences (\d+)')
+        for line in rfd:
+            m = total.match(line)
+            if m:
+                metrics.append({ 'metric': 'in total',
+                                 'value':  m.group(0) })
+    rfd.close()
 
+    with dxpy.open_dxfile(summary_link) as sfd:
+        fastqc = re.compile('(PASS|FAIL|WARN)\s+(.+)\s+ENCFF')
+        for line in sfd:
+            m = fastqc.match(line)
+            if m:
+                metrics.append({ 'metric': m.group(2),
+                                 'value':  m.group(1) })
+    sfd.close()
+
+    print json.dumps(metrics)
 
 
 if __name__ == '__main__':
