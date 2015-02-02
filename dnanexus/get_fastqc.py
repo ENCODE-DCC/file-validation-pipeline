@@ -58,8 +58,8 @@ def main():
         for line in rfd:
             m = total.match(line)
             if m:
-                metrics.append({ 'metric': 'in total',
-                                 'value':  m.group(0) })
+                metrics.append({ 'metric': 'Total Sequences',
+                                 'value':  m.group(1) })
     rfd.close()
 
     with dxpy.open_dxfile(summary_link) as sfd:
