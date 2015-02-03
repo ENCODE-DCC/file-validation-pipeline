@@ -83,7 +83,7 @@ def makeQuantBamInputs():
                 "$dnanexus_link":
                         {
                           "project": "project-BQkYKg00F1GP55qQ9Qy00VP0",
-                          "id": "file-BX4jZ8j07FFZVkPx4xfXQG88"
+                          "id": "file-BX4fG88013ZZVkPx4xfXPFbF"
                         }
             },
             "file_meta": {
@@ -125,7 +125,7 @@ def makeQuantBamInputs():
                 "$dnanexus_link":
                         {
                           "project": "project-BQkYKg00F1GP55qQ9Qy00VP0",
-                          "id": "file-BX405g00B694VkPx4xfV8fvG"
+                          "id": "file-BX3vzj8054Z4VkPx4xfQkX00"
                         }
             },
             "file_meta": {
