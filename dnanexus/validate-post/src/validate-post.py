@@ -76,9 +76,13 @@ def validate(filename, file_meta):
     logger.debug("Run Validate Files on %s" % filename)
     validate_args = validate_map.get(file_meta['file_format'])
     assembly = file_meta.get('assembly')
-    if assembly:
+
+    if file_meta['file_type'] == 'bam' and file_meta.get('output_type','') == 'transcriptome alignments':
+        chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, file_meta['genome_annotation'])]
+    elif assembly:
         chromInfo = ['-chromInfo=%s/%s/chrom.sizes' % (encValData, assembly)]
     else:
+        # not sure this is a sensible default
         chromInfo = ['-chromInfo=%s/hg19/chrom.sizes' % encValData]
 
     print subprocess.check_output(['ls','-l'])

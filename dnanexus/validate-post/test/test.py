@@ -12,7 +12,7 @@ from dxpy.exceptions import DXAPIError
 src_dir = os.path.join(os.path.dirname(__file__), "..")
 test_resources_dir = os.path.join(src_dir, "test", "resources")
 
-def makeInputs():
+def makeBedInput():
     # Please fill in this method to generate default inputs for your app.
     return {
         "pipe_file":  {
@@ -31,27 +31,12 @@ def makeInputs():
         },
         "debug": True,
         "key": 'test',
-        "skipvalidate": False
+        "skipvalidate": True
     }
-    ''' BED
+
+def makeBbInput():
+    return {
         "pipe_file":  {
-            "$dnanexus_link":
-                    {
-                      "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
-                      "id": "file-BVvVvB80fp5VxK0vfQJv0B66"
-                    }
-        },
-        "file_meta": {
-            "dataset": "ENCSR765JPC",
-            "file_format": "bed_bedMethyl",
-            "output_type": "methyl CG",
-            "lab": '/labs/j-michael-cherry/',
-            "award":'/awards/U41HG006992/'
-        },
-        "debug": True,
-        "key": 'test'
-    BAM
-            "pipe_file":  {
             "$dnanexus_link":
                     {
                       "project": "project-BQbX5B00XB3jyYq8KZ2Q00kz",
@@ -68,13 +53,105 @@ def makeInputs():
         "debug": True,
         "key": 'test',
         "skipvalidate": True
-    '''
+    }
+
+def makeQuantBamInputs():
+    return [
+        {
+        "pipe_file":  {
+            "$dnanexus_link":
+                    {
+                      "project": "project-BQkYKg00F1GP55qQ9Qy00VP0",
+                      "id": "file-BX4f68j0bpZ8PyY514B77z4Q"
+                    }
+        },
+        "file_meta": {
+            "dataset": "ENCSR950BNG",
+            "file_format": "bam",
+            "output_type": "transcriptome alignments",
+            "lab": '/labs/j-michael-cherry/',
+            "award":'/awards/U41HG006992/',
+            "assembly": 'mm10',
+            "genome_annotation": 'M2'
+        },
+        "debug": True,
+        "key": 'test',
+        "skipvalidate": False
+        },
+        {
+            "pipe_file":  {
+                "$dnanexus_link":
+                        {
+                          "project": "project-BQkYKg00F1GP55qQ9Qy00VP0",
+                          "id": "file-BX4jZ8j07FFZVkPx4xfXQG88"
+                        }
+            },
+            "file_meta": {
+                "dataset": "ENCSR950BNG",
+                "file_format": "bam",
+                "output_type": "transcriptome alignments",
+                "lab": '/labs/j-michael-cherry/',
+                "award":'/awards/U41HG006992/',
+                "assembly": 'mm10',
+                "genome_annotation": 'M3'
+            },
+            "debug": True,
+            "key": 'test',
+            "skipvalidate": False
+        },
+        {
+            "pipe_file":  {
+                "$dnanexus_link":
+                        {
+                          "project": "project-BQkYKg00F1GP55qQ9Qy00VP0",
+                          "id": "file-BX4f8qj0yqG71z23Vjb50P0v"
+                        }
+            },
+            "file_meta": {
+                "dataset": "ENCSR950BNG",
+                "file_format": "bam",
+                "output_type": "transcriptome alignments",
+                "lab": '/labs/j-michael-cherry/',
+                "award":'/awards/U41HG006992/',
+                "assembly": 'mm10',
+                "genome_annotation": 'M4'
+            },
+            "debug": True,
+            "key": 'test',
+            "skipvalidate": False
+        },
+        {
+            "pipe_file":  {
+                "$dnanexus_link":
+                        {
+                          "project": "project-BQkYKg00F1GP55qQ9Qy00VP0",
+                          "id": "file-BX405g00B694VkPx4xfV8fvG"
+                        }
+            },
+            "file_meta": {
+                "dataset": "ENCSR000AEL",
+                "file_format": "bam",
+                "output_type": "transcriptome alignments",
+                "lab": '/labs/j-michael-cherry/',
+                "award":'/awards/U41HG006992/',
+                "assembly": 'hg19',
+                "genome_annotation": 'V19'
+            },
+            "debug": True,
+            "key": 'test',
+            "skipvalidate": False
+        }
+    ]
+
+
 
 class TestvalidatePost(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Upload the app to the Platform.
-        cls.base_input = makeInputs()
+        cls.bed_input = makeBedInput()
+        cls.bb_input = makeBbInput()
+        cls.qbams_input = makeQuantBamInputs()
         bundled_resources = dxpy.app_builder.upload_resources(src_dir)
         try:
             app_name = os.path.basename(os.path.abspath(src_dir)) + "_test"
@@ -98,14 +175,43 @@ class TestvalidatePost(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_base_input(self):
+    def test_post(self):
         """
-        Tests the app with a basic input.
+        Tests the app with a basic input, skipping validation
         """
-        job = dxpy.DXApplet(self.applet_id).run(self.base_input)
+        job = dxpy.DXApplet(self.applet_id).run(self.bed_input)
         print "Waiting for %s to complete" % (job.get_id(),)
         job.wait_on_done()
-        print json.dumps(job.describe()["output"])
+        outp = job.describe()["output"]
+        print json.dumps(outp)
+
+        bb_input = self.bb_input
+        bb_input['file_meta'].update({'derived_from': [ outp['accession'] ]})
+        djob = dxpy.DXApplet(self.applet_id).run(bb_input)
+        print "Waiting for %s to complete" % (djob.get_id(),)
+        djob.wait_on_done()
+        outp = djob.describe()["output"]
+        print json.dumps(outp)
+
+    def test_post_and_valid(self):
+        """
+        Tests validation for quantification bams (4 types)
+        """
+        jobs = []
+        for bam in self.qbams_input:
+            # start 4 jobs.
+            jobs.append(dxpy.DXApplet(self.applet_id).run(bam))
+            print "Waiting for %s to complete" % (jobs[-1].get_id(),)
+
+        for job in jobs:
+            job.wait_on_done()
+            print "Job %s done" % (job.get_id(),)
+            # should wait until all 4 are done
+
+        for job in jobs:
+            outp = job.describe()["output"]
+            print json.dumps(outp)
+
 
 if __name__ == '__main__':
     unittest.main()
