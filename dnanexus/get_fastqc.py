@@ -129,6 +129,8 @@ def get_exp_time(accession, project):
             sizes = "\t".join([ "\t".join((fq, str(total_reads[fq]))) for fq in elapsed[repstr]['fastqs']])
             print "\t".join((exp['accession'],repstr, str(elapsed[repstr]['time']), sizes, paired))
 
+        return expr
+
 # woo hoo global
 (AUTHID,AUTHPW,SERVER) = dxencode.processkey('default')
 
