@@ -11,7 +11,7 @@ PROJECT_DEFAULT = 'dna-me-pipeline'
 RESULT_FOLDER_DEFAULT = '/runs'
 
 labels = [
-        'Sequences analysed in total'
+        'Sequences analysed in total',
         'Mapping efficiency',
         'C methylated in CpG context',
         'C methylated in CHG context',
@@ -21,22 +21,23 @@ labels = [
 
 def parse_map_report(folder, project):
 
-    mapreport = "*_bismark_map_report.txt"
-    report_link = dxencode.find_file(mapreport, project.get_id(), folder=folder, recurse=False)
+    mapreport = "/*_bismark_map_report.txt"
+    report_link = dxencode.find_file(folder+mapreport, project.get_id(), recurse=False)
 
     metrics = {}
     res = {}
     for lab in labels:
-        res[lab] = re.compile("(%s):\s+(.+)\s")
+        res[lab] = re.compile("(%s):\s+(.+)" % lab)
 
     try:
         with dxpy.open_dxfile(report_link) as rfd:
             for line in rfd:
-                for metric in res.keys():
+                m = False
+                for metric in res.values():
                     m = metric.match(line)
-                if m:
-                    metrics.update({ m.group(1): m.group(2) })
-        rfd.close()
+                    if m:
+                        metrics.update({ m.group(1): m.group(2).strip() })
+                        continue
 
     except Exception, e:
         print "ERROR: Could not read Bismark mapping report in %s (%s) \n%s" % (folder, report_link, e)
@@ -52,11 +53,11 @@ def get_bismark_stats(experiment, project):
         acc = experiment['accession']
         metrics[acc] = {}
 
-        rep_str = rep['biological_replicate_number']+'_'+rep['technical_replicate_number']
+        rep_str = "%s_%s" % (rep['biological_replicate_number'], rep['technical_replicate_number'])
         folder = RESULT_FOLDER_DEFAULT+'/'+acc+'/'+rep_str
 
         mapped = parse_map_report(folder, project)
-        lamdba_mapped = parse_map_report(folder+'/lambda', project)
+        lambda_mapped = parse_map_report(folder+'/lambda', project)
 
         print '\t'.join([acc,rep_str]+mapped.values()+lambda_mapped.values())
 
@@ -65,12 +66,17 @@ def get_bismark_stats(experiment, project):
 def main():
     argparser = get_fastqc.get_args()
 
+    argparser.add_argument('--skipfq',
+                            help='Skip parsing fastqc',
+                            action='store_true',
+                            required=False)
+
     args = argparser.parse_args()
 
     project = dxencode.get_project(args.project)
     fqc_metrics = {}
     if args.experiment:
-        expr = get_fastqc.get_exp_time(args.experiment, project)
+        expr = get_fastqc.get_exp_time(args.experiment, project, skip=args.skipfq)
         fqc_metrics[expr['accession']] = {}
         for fq in [ f for f in expr['files'] if f['file_format'] == 'fastq' ]:
             fqc_metrics[expr['accession']][fq['accession']] = get_fastqc.get_fastqc(fq['accession'], project)

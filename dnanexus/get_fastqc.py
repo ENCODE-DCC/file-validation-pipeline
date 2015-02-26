@@ -61,7 +61,6 @@ def get_fastqc(accession, project):
                 m = total.match(line)
                 if m:
                     metrics.update({ 'Total Sequences': m.group(1) })
-        rfd.close()
     except Exception, e:
         print "ERROR: Could not read FastQC summary: %s (%s) \n%s" % (summary_fn, summary_link, e)
         metrics.update({'Total Sequences': -999.999 })
@@ -73,7 +72,6 @@ def get_fastqc(accession, project):
                 m = fastqc.match(line)
                 if m:
                     metrics.update({ m.group(2):  m.group(1) })
-        sfd.close()
 
     except Exception, e:
         print "ERROR: Could not read FastQC report: %s (%s) \n%s" % (report_fn, report_link, e)
@@ -95,7 +93,7 @@ def get_analysis_time(accession, repstr, project):
     #print start, finish, finish-start, (finish-start)/1000.0
     return (finish-start)/1000.0 # covert to secs.
 
-def get_exp_time(accession, project):
+def get_exp_time(accession, project, skip=False):
 
         expr = dxencode.encoded_get(SERVER+accession, AUTHID=AUTHID, AUTHPW=AUTHPW)
         try:
@@ -105,6 +103,9 @@ def get_exp_time(accession, project):
             return
 
         exp = expr.json()
+
+        if skip:
+            return exp
 
         elapsed = {}
         for rep in exp['replicates']:

@@ -113,7 +113,7 @@ def noop(fastq):
     }
 
 @dxpy.entry_point("process")
-def process(filename, bucket_url, project, folder):
+def process(filename, bucket_url, project, folder, skipvalidate=False):
     # Change the following to process whatever input this stage
     # receives.  You may also want to copy and paste the logic to download
     # and upload files here as well if this stage receives file input
@@ -135,6 +135,14 @@ def process(filename, bucket_url, project, folder):
         dxpy.download_dxfile(test[0]['id'], filename)
         dx_file=dxpy.dxfile.DXFile(test[0]['id'])
     reads_basename = filename.rstrip('.gz').rstrip('.fq').rstrip('.fastq')
+
+    if skipvalidate:
+        return {
+            "file": dx_file,
+            "report": None,
+            "summary": None,
+            "zip": None
+        }
 
     subprocess.check_call(['mkdir', 'output'])
     logger.info("Run QC")
@@ -161,7 +169,7 @@ def process(filename, bucket_url, project, folder):
     }
 
 @dxpy.entry_point("main")
-def main(accession, key=None, debug=False):
+def main(accession, key=None, debug=False, skipvalidate=False):
 
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
@@ -222,7 +230,8 @@ def main(accession, key=None, debug=False):
                     "filename": file_name,
                     "bucket_url": bucket_url,
                     "project": project.get_id(),
-                    "folder": folder
+                    "folder": folder,
+                    "skipvalidate": skipvalidate
                 }
                 subjobs.append(dxpy.new_dxjob(subjob_input, "process"))
 
@@ -260,12 +269,17 @@ def main(accession, key=None, debug=False):
     # output into the parent container only after all subjobs have
     # finished.
 
-    output = {
-                "files": [subjob.get_output_ref("file") for subjob in subjobs],
-                "reports": [subjob.get_output_ref("report") for subjob in subjobs],
-                "summaries": [subjob.get_output_ref("summary") for subjob in subjobs],
-                "zips": [subjob.get_output_ref("zip") for subjob in subjobs],
-    }
+    if skipvalidate:
+        output = {
+                    "files": [subjob.get_output_ref("file") for subjob in subjobs]
+        }
+    else:
+        output = {
+                    "files": [subjob.get_output_ref("file") for subjob in subjobs],
+                    "reports": [subjob.get_output_ref("report") for subjob in subjobs],
+                    "summaries": [subjob.get_output_ref("summary") for subjob in subjobs],
+                    "zips": [subjob.get_output_ref("zip") for subjob in subjobs],
+        }
 
 
     return output

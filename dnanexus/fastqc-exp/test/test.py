@@ -17,7 +17,7 @@ def makeInputs():
     return {
         "accession": "ENCSR000CYA",
         "debug": True,
-        "key": 'www'
+        "key": 'test'
     }
 
 
@@ -57,6 +57,18 @@ class Testfastqc(unittest.TestCase):
         print "Waiting for %s to complete" % (job.get_id(),)
         job.wait_on_done()
         print json.dumps(job.describe()["output"])
+
+    def test_skip(self):
+        """
+        Tests the app skipping validation.
+        """
+        skip_input = self.base_input
+        skip_input.update({'skipvalidate': True})
+        job = dxpy.DXApplet(self.applet_id).run(skip_input)
+        print "Waiting for %s to complete" % (job.get_id(),)
+        job.wait_on_done()
+        print json.dumps(job.describe()["output"])
+
 
 if __name__ == '__main__':
     unittest.main()
