@@ -44,7 +44,7 @@ def get_args():
                     default=RESULT_FOLDER_DEFAULT,
                     required=False)
 
-    return ap.parse_args()
+    return ap
 
 def get_fastqc(accession, project):
     summary_fn = accession+"_summary.txt"
@@ -129,13 +129,14 @@ def get_exp_time(accession, project):
             sizes = "\t".join([ "\t".join((fq, str(total_reads[fq]))) for fq in elapsed[repstr]['fastqs']])
             print "\t".join((exp['accession'],repstr, str(elapsed[repstr]['time']), sizes, paired))
 
-        return expr
+        return exp
 
 # woo hoo global
 (AUTHID,AUTHPW,SERVER) = dxencode.processkey('default')
 
 def main():
-    args = get_args()
+    argparser = get_args()
+    args = argparser.parse_args()
 
     project = dxencode.get_project(args.project)
 
