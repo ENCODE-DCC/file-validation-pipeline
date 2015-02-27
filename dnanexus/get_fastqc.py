@@ -30,7 +30,6 @@ def get_args():
 
     ap.add_argument('--assay',
                     help="Assay to loop over for all exps",
-                    default="OBI:0001271",
                     required=False)
 
     ap.add_argument('-t', '--all',
