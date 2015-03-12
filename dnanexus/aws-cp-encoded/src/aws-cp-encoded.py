@@ -59,12 +59,13 @@ def main(accession, key=None, debug=False):
 
     exp = response.json()
 
-    for ff in exp.get('files', []):
-        if ff['status'] != 'uploading':
-            continue
+    for ff in exp.get('original_files', []):
         try:
-            fr = dxencode.encoded_get(SERVER+ff['@id'], AUTHID, AUTHPW)
-            notes = json.loads(fr.json()['notes'])
+            fr = dxencode.encoded_get(SERVER+ff, AUTHID, AUTHPW)
+            ff = fr.json()
+            if ff['status'] != 'uploading':
+                continue
+            notes = json.loads(ff['notes'])
             dxid = notes['dx-id']
         except Exception, e:
             logger.error("Error getting dx id: %s for %s" % (e, ff['accession']))
