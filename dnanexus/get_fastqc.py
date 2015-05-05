@@ -4,6 +4,8 @@ import dxpy
 import argparse
 import re
 import json
+import os
+import subprocess
 from dxencode import dxencode as dxencode
 
 PROJECT_DEFAULT = 'long-rna-seq-pipeline'
@@ -37,6 +39,11 @@ def get_args():
                     action='store_true',
                     required=False)
 
+    ap.add_argument('-i', '--invert',
+                    help='Work from DNA nexus to get all fastqc results',
+                    action='store_true',
+                    required=False)
+
     ap.add_argument('--resultsLoc',
                     help="The location to to place results folders (default: '<project>:" + \
                                                                     RESULT_FOLDER_DEFAULT + "')",
@@ -62,7 +69,7 @@ def get_fastqc(accession, project):
                     metrics.update({ 'Total Sequences': m.group(1) })
     except Exception, e:
         print "ERROR: Could not read FastQC summary: %s (%s) \n%s" % (summary_fn, summary_link, e)
-        metrics.update({'Total Sequences': -999.999 })
+        raise e
 
     try:
         with dxpy.open_dxfile(summary_link) as sfd:
@@ -74,6 +81,7 @@ def get_fastqc(accession, project):
 
     except Exception, e:
         print "ERROR: Could not read FastQC report: %s (%s) \n%s" % (report_fn, report_link, e)
+        raise e
 
     #print json.dumps(metrics)
     return metrics
@@ -132,7 +140,28 @@ def get_exp_time(accession, project, skip=False):
         return exp
 
 # woo hoo global
-(AUTHID,AUTHPW,SERVER) = dxencode.processkey('default')
+(AUTHID,AUTHPW,SERVER) = dxencode.processkey('test')
+
+def workflow(accession, jobid):
+    ''' finds relevant workflow object, or creates it if doesn't exist '''
+    job = dxpy.describe(jobid)
+    pipeline = "UNDEFINED"
+    wf = {}
+    if job.get('analysis', None):
+        wf = {
+            dx_analysis_id: job['analysis']
+        }
+
+    else:
+        wf = {
+            dx_analysis_id: jobid
+        }
+
+    wf['status'] = 'finished'
+
+def analysis_step_run(workflow):
+    ''' finds relavant analysis_step_run object or creatues it if it doesn't exist '''
+    pass
 
 def main():
     argparser = get_args()
@@ -153,8 +182,8 @@ def main():
     elif args.experiment:
         get_exp_time(args.experiment, project)
     elif args.all:
-        assay = args.assay or "OBI:0001271"
-        query = '/search/?type=experiment&assay_term_id=%s&award.rfa=ENCODE3&limit=all&frame=embedded&replicates.library.biosample.donor.organism.name=mouse&files.file_format=fastq' % assay
+
+        query = '/search/?type=experiment&assay_term_id=%s&award.rfa=ENCODE3&limit=all&frame=object&files.file_format=fastq' % assay
 
         res = dxencode.encoded_get(SERVER+query, AUTHID=AUTHID, AUTHPW=AUTHPW)
         exps = res.json()['@graph']
@@ -172,7 +201,51 @@ def main():
                         print "Skipping %s as single-cell (%s %s)" % (acc, exp['replicates'][0]['library'].get('nucleic_acid_starting_quantity_units', ""), ncells)
                         #print json.dumps(exp['replicates'][0]['library'], sort_keys=True, indent=4, separators=(',',': '))
                         continue
+
             get_exp_time(acc, project)
+
+    elif args.invert:
+        fnregex = re.compile('(ENCFF[0-9][0-9][0-9][A-Z][A-Z][A-Z]).+')
+        zip_files = dxencode.get_files('*_fastqc.zip', project.get_id(), multiple=True)
+        for zfid in zip_files:
+            zfmeta = dxpy.describe(zfid)
+            mm = fnregex.match(zfmeta['name'])
+            if not mm:
+                print("Skipping %s because no accession" % zfmeta['name'])
+                continue
+            else:
+                acc = mm.group(1)
+                dxpy.download_dxfile(zfid, "fastqc_temp.zip")
+                out = subprocess.check_call(['unzip', 'fastqc_temp.zip'])
+
+                try:
+                    html_fname = acc + '_fastqc/fastqc_report.html'
+                    os.path.isfile(html_fname)
+                    attachment = {
+                        "download": html_fname
+                    }
+
+                    attachment = dxencode.prep_attachment(attachment)
+                except:
+                    print("Error creating HTML attachment for %s" % html_fname)
+                    continue
+
+                try:
+                    metric = get_fastqc(acc, project)
+                    metric['attachment'] = attachment
+                    wf = workflow(acc, zfmeta['createdBy']['job'])
+                    asr = analysis_step_run(wf)
+                    metric['analysis_step_run'] = asr
+                    post_qc(metric)
+                except Exception, e:
+                    print("Error: %s creating and posting objects" % e)
+
+                # clean up
+                if (0):
+                    subprocess.check_call(['rm', '-r', acc+'_fastqc'])
+                    subprocess.check_call(['rm', 'fastqc_temp.zip'])
+                else:
+                    exit(1)
 
 
 if __name__ == '__main__':
