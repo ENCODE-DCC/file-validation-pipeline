@@ -17,7 +17,7 @@ main() {
     fileB_root=${fileB_fn%.*}
     fileA_ext=${fileA_fn#*.}
     #fileB_ext=${fileB_fn#*.}
-    log_diff_fn=compBams_${fileA_root}_${fileB_root}.txt
+    log_diff_fn=compMd5_${fileA_root}_${fileB_root}.txt
 
     if [ "${fileA_fn}" == "${fileB_fn}" ]; then
         # avoid problems with identically named files
@@ -38,8 +38,6 @@ main() {
         sort < ${fileB_root}.${fileA_ext} > ${fileB_root}.sorted
         mv ${fileB_root}.sorted ${fileB_root}.${fileA_ext}
         set +e
-        echo "- Lines:" | tee -a ${log_diff_fn} 
-        wc -l *.${fileA_ext} | tee -a ${log_diff_fn} 
     fi
 
     echo " " >>  ${log_diff_fn}
@@ -49,6 +47,12 @@ main() {
     echo "- md5sum:" | tee -a ${log_diff_fn} 
     md5sum *.${fileA_ext} | tee -a ${log_diff_fn}
 
+    if [ "$sort_first" == "true" ]; then
+        echo "- Lines:" | tee -a ${log_diff_fn} 
+        wc -l *.${fileA_ext} | tee -a ${log_diff_fn} 
+        echo "- Lines that differ:" | tee -a ${log_diff_fn} 
+        diff --speed-large-files --suppress-common-lines -y ${fileA_root}.${fileA_ext} ${fileB_root}.${fileA_ext} | wc -l | tee -a ${log_diff_fn}
+    fi
 
     echo "* Uploading results..."
     log_diff=$(dx upload ${log_diff_fn} --brief)

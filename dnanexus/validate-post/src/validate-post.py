@@ -22,6 +22,8 @@ print subprocess.check_output(['ls','-l'])
 print subprocess.check_output(['ls','dxencode','-l'])
 
 from dxencode import dxencode as dxencode
+# Note: test dxencode changes by removing from dxapp.json:execDepends 
+#       and adding dxencode.py & __init__.py to resources/home/dnanexus/dxencode
 
 logger = logging.getLogger("Applet")
 
@@ -177,14 +179,15 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
         v['accession'] = f_obj.get('accession', "NOT POSTED")
         logger.info("* Posted %s to '%s'" % (filename,v['accession']))
 
-        # update pipe_file accession property
+        # update pipe_file md5sum and accession properties
+        dxencode.dx_file_set_property(fid,'md5sum',file_meta['md5sum'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
         acc_key = dxencode.dx_property_accesion_key(SERVER)
         acc = dxencode.dx_file_set_property(fid,acc_key,v['accession'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
         if acc == None or acc != v['accession']:
             logger.info("* Failed to update %s to '%s' in file properties" % (acc_key,v['accession']))
         else:
             logger.info("* Updated %s to '%s' in file properties" % (acc_key,acc))
-        logger.debug(json.dumps(f_obj, indent=4, sort_keys=True))
+        #logger.debug(json.dumps(f_obj, indent=4, sort_keys=True))
 
     else:
         logger.info("* File invalid: %s" % v['validation'])
