@@ -1,0 +1,98 @@
+{
+  "name": "comp-bams",
+  "title": "Compares two bams",
+  "summary": "comp-bams",
+  "dxapi": "1.0.0",
+  "version": "1.0.0",
+  "categories": [],
+  "inputSpec": [
+    {
+      "name": "bamA",
+      "label": "A bam file",
+      "class": "file",
+      "optional": false
+    },
+    {
+      "name": "bamB",
+      "label": "Another bam file",
+      "class": "file",
+      "optional": false
+    },
+    {
+      "name": "all",
+      "label": "Compare all bam reads by md5sum",
+      "class": "string",
+      "choices": ["true", "false"],
+      "default": "true",
+      "optional": false
+    },
+    {
+      "name": "allsort",
+      "label": "Compare all bam reads by sorted md5sum",
+      "class": "string",
+      "choices": ["true", "false"],
+      "default": "false",
+      "optional": false
+    },
+    {
+      "name": "uniqs",
+      "label": "Compare uniquely mapped reads by sorted md5sum",
+      "class": "string",
+      "choices": ["true", "false"],
+      "default": "false",
+      "optional": false
+    },
+    {
+      "name": "multis",
+      "label": "Compare multi-mapped reads by sorted md5sum",
+      "class": "string",
+      "choices": ["true", "false"],
+      "default": "false",
+      "optional": false
+    },
+    {
+      "name": "unmapped",
+      "label": "Compare unmapped reads by sorted md5sum",
+      "class": "string",
+      "choices": ["true", "false"],
+      "default": "false",
+      "optional": false
+    },
+    {
+      "name": "headers",
+      "label": "Count lines that differ in bam file headers",
+      "class": "string",
+      "choices": ["true", "false"],
+      "default": "true",
+      "optional": false
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "log_diff",
+      "label": "Log of diffs in test",
+      "class": "file"
+    }
+  ],
+  "runSpec": {
+    "interpreter": "bash",
+    "file": "src/comp-bams.sh",
+    "execDepends": [
+      {"name":"gawk"}
+    ],
+    "systemRequirements": {
+      "main": {
+        "instanceType": "mem3_hdd2_x4"
+      },
+      "myEntryPoint": {
+        "instanceType": "mem3_hdd2_x4"
+      }
+    }
+  },
+  "access": {
+    "network": [
+      "*"
+    ]
+  },
+  "authorizedUsers": []
+}
