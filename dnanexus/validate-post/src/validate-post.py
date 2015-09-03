@@ -177,7 +177,20 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
         logger.info("* Posting file and metadata to ENCODEd...")
         f_obj = dxencode.encoded_post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
         v['accession'] = f_obj.get('accession', "NOT POSTED")
-        logger.info("* Posted %s to '%s'" % (filename,v['accession']))
+        if v['accession'] == "NOT POSTED":
+            v['accession'] = f_obj.get("external_accession", "NOT POSTED")
+        if v['accession'] == "NOT POSTED":
+            v['accession'] = file_meta.get("external_accession", "NOT POSTED")
+            print "* Returned f_obj..."
+            print json.dumps(f_obj, indent=4, sort_keys=True)
+            raise # This will ensure that splashdown doesn't continue uploading.
+        
+        post_status = f_obj.get('status',"uploading")       
+        if post_status == 'upload failed':
+            logger.info("* Post ERROR on %s to '%s': %s" % (filename,v['accession'],post_status))
+            # NOTE: need to set the accession to dx file nonetheless, since the file object was created in encodeD
+        else:
+            logger.info("* Posted %s to '%s'" % (filename,v['accession']))
 
         # update pipe_file md5sum and accession properties
         dxencode.dx_file_set_property(fid,'md5sum',file_meta['md5sum'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
@@ -188,6 +201,9 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
         else:
             logger.info("* Updated %s to '%s' in file properties" % (acc_key,acc))
         #logger.debug(json.dumps(f_obj, indent=4, sort_keys=True))
+
+        if post_status == 'upload failed':
+            raise # This will ensure that splashdown doesn't continue uploading.
 
     else:
         logger.info("* File invalid: %s" % v['validation'])
