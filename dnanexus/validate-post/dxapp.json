@@ -67,7 +67,7 @@
           "package_manager": "git",
           "url": "https://github.com/ENCODE-DCC/dxencode.git",
           "destdir": "/home/dnanexus",
-          "tag": "submit"
+          "tag": "master"
       },
       {"name": "awscli", "package_manager": "pip"}
     ]
