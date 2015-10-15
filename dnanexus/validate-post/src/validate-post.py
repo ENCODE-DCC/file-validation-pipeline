@@ -154,6 +154,10 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
     duration = end - start
     logger.info("* Download in %.2f seconds" % duration.seconds)
 
+    if filename.endswith('.bed') or filename.endswith('.gff'):
+        subprocess.check_call(['gzip',filename])
+        filename = filename + '.gz'
+
     # gathering metadata
     file_meta['submitted_file_name'] = "%s/%s" % (folder, filename)
     file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
@@ -173,7 +177,7 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
         v = { 'validation': 'Not Run' }
 
     if v['validation'] == "Error count 0\n" or v['validation'].find('Not Run') == 0:   ## yes with CR
-
+    
         logger.info("* Posting file and metadata to ENCODEd...")
         f_obj = dxencode.encoded_post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
         v['accession'] = f_obj.get('accession', "NOT POSTED")
