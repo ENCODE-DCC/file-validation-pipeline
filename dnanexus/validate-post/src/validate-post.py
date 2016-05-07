@@ -19,11 +19,11 @@ import dxpy
 
 print sys.path
 print subprocess.check_output(['ls','-l'])
-print subprocess.check_output(['ls','dxencode','-l'])
+print subprocess.check_output(['ls','dxencode','-l']) # should contain keypairs
 
-from dxencode import dxencode as dxencode
-# Note: test dxencode changes by removing from dxapp.json:execDepends 
-#       and adding dxencode.py & __init__.py to resources/home/dnanexus/dxencode
+#from dxencode import dxencode as dxencode
+from dxencode import dx as dx
+from dxencode import encd as encd
 
 logger = logging.getLogger("Applet")
 
@@ -135,13 +135,13 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
     # following generates 10 subjobs running with the same dummy
     # input.
 
-    dxencode.logger = logging.getLogger("Applet.dxe")
+    encd.logger = logging.getLogger("Applet.dxe")
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
 
-    (AUTHID,AUTHPW,SERVER) = dxencode.processkey(key)
+    (AUTHID,AUTHPW,SERVER) = encd.processkey(key)
 
     f_des = dxpy.describe(pipe_file)
     filename = f_des['name']
@@ -160,11 +160,13 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
 
     # gathering metadata
     file_meta['submitted_file_name'] = "%s/%s" % (folder, filename)
-    file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
+    file_meta['md5sum'] = dx.calc_md5(filename).hexdigest()
     file_meta['file_size'] = os.path.getsize(filename)
     if "aliases" not in file_meta:
         file_meta["aliases"] = []
     file_meta["aliases"].append("dnanexus:"+fid)
+    if file_meta.get('accession') != None:
+        file_meta["status"] = "upload failed" # Can only repost to same accession if status is upload failed.
 
     if not skipvalidate:
         logger.info("* Validating: %s (%s)" % (filename, folder))
@@ -179,7 +181,7 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
     if v['validation'] == "Error count 0\n" or v['validation'].find('Not Run') == 0:   ## yes with CR
     
         logger.info("* Posting file and metadata to ENCODEd...")
-        f_obj = dxencode.encoded_post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
+        f_obj = encd.post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
         v['accession'] = f_obj.get('accession', "NOT POSTED")
         if v['accession'] == "NOT POSTED":
             v['accession'] = f_obj.get("external_accession", "NOT POSTED")
@@ -189,7 +191,7 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
             print json.dumps(f_obj, indent=4, sort_keys=True)
             raise # This will ensure that splashdown doesn't continue uploading.
         
-        post_status = f_obj.get('status',"uploading")       
+        post_status = f_obj.get('status','upload failed')       
         if post_status == 'upload failed':
             logger.info("* Post ERROR on %s to '%s': %s" % (filename,v['accession'],post_status))
             # NOTE: need to set the accession to dx file nonetheless, since the file object was created in encodeD
@@ -197,13 +199,15 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
             logger.info("* Posted %s to '%s'" % (filename,v['accession']))
 
         # update pipe_file md5sum and accession properties
-        dxencode.dx_file_set_property(fid,'md5sum',file_meta['md5sum'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
-        acc_key = dxencode.dx_property_accesion_key(SERVER)
-        acc = dxencode.dx_file_set_property(fid,acc_key,v['accession'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
+        dx.file_set_property(fid,'md5sum',file_meta['md5sum'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
+        acc_key = dx.property_accesion_key(SERVER)
+        if post_status == 'upload failed':
+            acc_key = acc_key + ' upload failed'
+        acc = dx.file_set_property(fid,acc_key,v['accession'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
         if acc == None or acc != v['accession']:
-            logger.info("* Failed to update %s to '%s' in file properties" % (acc_key,v['accession']))
+            logger.info("* Failed to update '%s' to '%s' in file properties" % (acc_key,v['accession']))
         else:
-            logger.info("* Updated %s to '%s' in file properties" % (acc_key,acc))
+            logger.info("* Updated '%s' to '%s' in file properties" % (acc_key,acc))
         #logger.debug(json.dumps(f_obj, indent=4, sort_keys=True))
 
         if post_status == 'upload failed':
