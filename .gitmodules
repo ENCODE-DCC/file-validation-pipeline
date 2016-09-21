@@ -1,3 +1,0 @@
-[submodule "jksrc"]
-	path = jksrc
-	url = git@github.com:ENCODE-DCC/kentUtils.git
