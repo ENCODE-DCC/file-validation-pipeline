@@ -1,0 +1,89 @@
+{
+  "name": "fetch-to-dx",
+  "title": "Fetch files",
+  "summary": "Get files for an ENCODE experiment for further processing by pipelines.",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "categories": [
+    "Encode"
+  ],
+  "inputSpec": [
+    {
+      "name": "exp_acc",
+      "label": "Experiment Accession",
+      "class": "string",
+      "optional": false
+    },
+    {
+      "name": "files_to_fetch",
+      "label": "File objects in a json string",
+      "class": "string",
+      "optional": false
+    },
+    {
+      "name": "key",
+      "label": "ENCODEd key for access (test, default, www)",
+      "class": "string",
+      "optional": true,
+      "default": "default"
+    },
+    {
+      "name": "skipvalidate",
+      "label": "Skip Validation (careful!)",
+      "class": "boolean",
+      "default": false,
+      "optional": true
+    },
+    {
+      "name": "debug",
+      "label": "debug",
+      "class": "boolean",
+      "optional": true
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "fetched_count",
+      "label": "Count of files successfully fetched",
+      "class": "int"
+    },
+    {
+      "name": "files",
+      "label": "Files that have been fetched",
+      "class": "array:file"
+    },
+    {
+      "name": "reports",
+      "label": "Full reports from FastQC",
+      "class": "array:file",
+      "optional": true
+    },
+    {
+      "name": "zips",
+      "label": "Zipped reports from FastQC",
+      "class": "array:file",
+      "optional": true
+    },
+    {
+      "name": "summaries",
+      "label": "Summaries of FastQC output",
+      "class": "array:file",
+      "optional": true
+    }
+  ],
+  "runSpec": {
+    "interpreter": "python2.7",
+    "file": "src/fetch-to-dx.py",
+    "execDepends": [
+      {"name":"openjdk-6-jre"},
+      {"name": "awscli", "package_manager": "pip"}
+    ]
+  },
+  "access": {
+    "project": "CONTRIBUTE",
+    "network": [
+      "*"
+    ]
+  },
+  "authorizedUsers": []
+}
