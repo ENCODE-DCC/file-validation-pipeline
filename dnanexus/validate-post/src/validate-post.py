@@ -14,12 +14,16 @@
 #   http://autodoc.dnanexus.com/bindings/python/current/
 
 import sys, os, subprocess, json, requests, shlex, urlparse, logging
+from datetime import datetime
 import dxpy
 
 print sys.path
 print subprocess.check_output(['ls','-l'])
+print subprocess.check_output(['ls','dxencode','-l']) # should contain keypairs
 
-from dxencode import dxencode as dxencode
+#from dxencode import dxencode as dxencode
+from dxencode import dx as dx
+from dxencode import encd as encd
 
 logger = logging.getLogger("Applet")
 
@@ -131,75 +135,87 @@ def main(pipe_file, file_meta, key=None, debug=False, skipvalidate=True):
     # following generates 10 subjobs running with the same dummy
     # input.
 
+    encd.logger = logging.getLogger("Applet.dxe")
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
 
-    (AUTHID,AUTHPW,SERVER) = dxencode.processkey(key)
+    (AUTHID,AUTHPW,SERVER) = encd.processkey(key)
 
     f_des = dxpy.describe(pipe_file)
     filename = f_des['name']
     fid = f_des['id']
     folder = dxpy.DXFile(fid, project=dxpy.PROJECT_CONTEXT_ID).folder
+    logger.info("* Downloading file from dx to local...")
+    start = datetime.now()
     dx_file = dxpy.download_dxfile(pipe_file, filename)
+    end = datetime.now()
+    duration = end - start
+    logger.info("* Download in %.2f seconds" % duration.seconds)
 
+    if filename.endswith('.bed') or filename.endswith('.gff'):
+        subprocess.check_call(['gzip',filename])
+        filename = filename + '.gz'
+
+    # gathering metadata
     file_meta['submitted_file_name'] = "%s/%s" % (folder, filename)
-    file_meta['md5sum'] = dxencode.calc_md5(filename).hexdigest()
+    file_meta['md5sum'] = dx.calc_md5(filename).hexdigest()
     file_meta['file_size'] = os.path.getsize(filename)
+    if "aliases" not in file_meta:
+        file_meta["aliases"] = []
+    file_meta["aliases"].append("dnanexus:"+fid)
+    if file_meta.get('accession') != None:
+        file_meta["status"] = "upload failed" # Can only repost to same accession if status is upload failed.
 
     if not skipvalidate:
-        print "Validating: %s (%s)" % (filename, folder)
+        logger.info("* Validating: %s (%s)" % (filename, folder))
+        start = datetime.now()
         v = validate(filename, file_meta)
+        end = datetime.now()
+        duration = end - start
+        logger.info("* Validated in %.2f seconds" % duration.seconds)
     else:
         v = { 'validation': 'Not Run' }
 
     if v['validation'] == "Error count 0\n" or v['validation'].find('Not Run') == 0:   ## yes with CR
+    
+        logger.info("* Posting file and metadata to ENCODEd...")
+        f_obj = encd.post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
+        v['accession'] = f_obj.get('accession', "NOT POSTED")
+        if v['accession'] == "NOT POSTED":
+            v['accession'] = f_obj.get("external_accession", "NOT POSTED")
+        if v['accession'] == "NOT POSTED":
+            v['accession'] = file_meta.get("external_accession", "NOT POSTED")
+            print "* Returned f_obj..."
+            print json.dumps(f_obj, indent=4, sort_keys=True)
+            raise # This will ensure that splashdown doesn't continue uploading.
+        
+        post_status = f_obj.get('status','upload failed')       
+        if post_status == 'upload failed':
+            logger.info("* Post ERROR on %s to '%s': %s" % (filename,v['accession'],post_status))
+            # NOTE: need to set the accession to dx file nonetheless, since the file object was created in encodeD
+        else:
+            logger.info("* Posted %s to '%s'" % (filename,v['accession']))
 
-        print("Submitting metadata.")
-        f_obj = dxencode.encoded_post_file(filename, file_meta, SERVER, AUTHID, AUTHPW)
-        v['accession'] = f_obj.get('accession', "NOT COPIED")
-        logger.info(json.dumps(f_obj, indent=4, sort_keys=True))
+        # update pipe_file md5sum and accession properties
+        dx.file_set_property(fid,'md5sum',file_meta['md5sum'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
+        acc_key = dx.property_accesion_key(SERVER)
+        if post_status == 'upload failed':
+            acc_key = acc_key + ' upload failed'
+        acc = dx.file_set_property(fid,acc_key,v['accession'],proj_id=dxpy.PROJECT_CONTEXT_ID,verbose=True)
+        if acc == None or acc != v['accession']:
+            logger.info("* Failed to update '%s' to '%s' in file properties" % (acc_key,v['accession']))
+        else:
+            logger.info("* Updated '%s' to '%s' in file properties" % (acc_key,acc))
+        #logger.debug(json.dumps(f_obj, indent=4, sort_keys=True))
+
+        if post_status == 'upload failed':
+            raise # This will ensure that splashdown doesn't continue uploading.
 
     else:
-        print "File invalid: %s" % v['validation']
+        logger.info("* File invalid: %s" % v['validation'])
         v['accession'] = "NOT POSTED"
-
-
-    # The following line creates the job that will perform the
-    # "postprocess" step of your app.  We've given it an input field
-    # that is a list of job-based object references created from the
-    # "process" jobs we just created.  Assuming those jobs have an
-    # output field called "output", these values will be passed to the
-    # "postprocess" job.  Because these values are not ready until the
-    # "process" jobs finish, the "postprocess" job WILL NOT RUN until
-    # all job-based object references have been resolved (i.e. the
-    # jobs they reference have finished running).
-    #
-    # If you do not plan to have the "process" jobs create output that
-    # the "postprocess" job will require, then you can explicitly list
-    # the dependencies to wait for those jobs to finish by setting the
-    # "depends_on" field to the list of subjobs to wait for (it
-    # accepts either dxpy handlers or string IDs in the list).  We've
-    # included this parameter in the line below as well for
-    # completeness, though it is unnecessary if you are providing
-    # job-based object references in the input that refer to the same
-    # set of jobs.
-    # If you would like to include any of the output fields from the
-    # postprocess_job as the output of your app, you should return it
-    # here using a job-based object reference.  If the output field in
-    # the postprocess function is called "answer", you can pass that
-    # on here as follows:
-    #
-    #return { "FastQC_reports": [ dxpy.dxlink(item) for item in postprocess_job.get_output_ref("report") ]}
-    #
-    # Tip: you can include in your output at this point any open
-    # objects (such as gtables) which will be closed by a job that
-    # finishes later.  The system will check to make sure that the
-    # output object is closed and will attempt to clone it out as
-    # output into the parent container only after all subjobs have
-    # finished.
-
 
     return v
 

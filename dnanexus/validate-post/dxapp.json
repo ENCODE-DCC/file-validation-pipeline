@@ -61,13 +61,21 @@
   "runSpec": {
     "interpreter": "python2.7",
     "file": "src/validate-post.py",
+    "systemRequirements": {
+      "main": {
+        "instanceType": "mem3_hdd2_x2"
+      },
+      "myEntryPoint": {
+        "instanceType": "mem3_hdd2_x2"
+      }
+    },
     "execDepends": [
       {
           "name":"dxencode",
           "package_manager": "git",
           "url": "https://github.com/ENCODE-DCC/dxencode.git",
           "destdir": "/home/dnanexus",
-          "tag": "submit"
+          "tag": "master"
       },
       {"name": "awscli", "package_manager": "pip"}
     ]

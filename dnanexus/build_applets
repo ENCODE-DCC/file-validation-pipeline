@@ -1,0 +1,69 @@
+#!/bin/bash
+
+applet_dest=`cat ~/.dnanexus_config/DX_PROJECT_CONTEXT_NAME`
+applets="comp_bams comp_md5sum fetch-to-dx validate-post"
+
+if [ $# -gt 0 ]; then
+    if [ $1 == "?" ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
+        echo "Usage: $0 [.|{project}] [{app}] [{app}]... [--test]"
+        echo "    Build applets in dx project"
+        echo "       project: Name of project to build in ('.' for default). Default: $applet_dest"
+        echo "       app:     One or more apps to build. Default: $applets"
+        echo "       --test   Must be last paramater. Say what would be done."
+        exit 1
+    fi
+fi
+if [ "$1" = "--test" ]; then
+    echo "Would build '$applets' in project '$applet_dest'"
+    exit 0
+fi
+
+skipped_project="nope"
+if [ $# -gt 0 ]; then
+    if [ "$1" != "-" ] && [ "$1" != "." ]; then
+        if [ -d $1 ]; then
+            #echo "First missing project as first argument.  Assuming '$applet_dest'"
+            skipped_project="true"
+        else
+            applet_dest=$1
+        fi 
+    fi
+    if [ $# -gt 1 ] || [ "$skipped_project" == "true" ]; then
+        if [ "$skipped_project" != "true" ]; then
+            shift
+        fi
+        applets=''
+        while (( "$#" )); do
+            if [ "$1" == '--test' ]; then
+                echo "Would build '$applets' in project '$applet_dest'"
+                exit 0
+            fi
+            applets="$applets ${1%/}"
+            shift
+        done
+    fi
+fi
+echo "Project: $applet_dest"
+echo "Apps:    $applets"
+
+project=$(dx find projects --name "$applet_dest")
+if [ -z "$project" ]
+  then
+    dx new project "$applet_dest" --brief
+fi
+
+for applet in $applets; do
+    echo "Building $applet at $applet_dest..."
+    if [ "$applet" == "fetch-to-dx" ] || [ "$applet" == "validate-post" ]; then
+        if [ -e ../../dxencode/keypairs.json ]; then
+            mkdir -p ${applet}/resources/home/dnanexus 
+            cp ../../dxencode/keypairs.json ${applet}/resources/home/dnanexus
+            #mkdir -p ${applet}/resources/home/dnanexus/dxencode 
+            #cp ../../dxencode/dxencode.py ${applet}/resources/home/dnanexus/dxencode
+            #cp ../../dxencode/__init__.py ${applet}/resources/home/dnanexus/dxencode
+        fi
+    fi
+    dx build "${applet}" --archive --destination "${applet_dest}:/"
+    rm -f ${applet}/resources/home/dnanexus/keypairs.json
+    #rm -rf ${applet}/resources/home/dnanexus/dnanexus/dxencode/
+done

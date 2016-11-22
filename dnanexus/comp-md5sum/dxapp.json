@@ -1,0 +1,56 @@
+{
+  "name": "comp-md5sum",
+  "title": "Compares two files with md5sum",
+  "summary": "comp-md5sum",
+  "dxapi": "1.0.0",
+  "version": "1.0.0",
+  "categories": [],
+  "inputSpec": [
+    {
+      "name": "fileA",
+      "label": "A file",
+      "class": "file",
+      "optional": false
+    },
+    {
+      "name": "fileB",
+      "label": "Another file",
+      "class": "file",
+      "optional": false
+    },
+    {
+      "name": "sort_first",
+      "label": "Simple sort files first",
+      "class": "boolean",
+      "optional": true
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "log_diff",
+      "label": "Log of diffs in test",
+      "class": "file"
+    }
+  ],
+  "runSpec": {
+    "interpreter": "bash",
+    "file": "src/comp-md5sum.sh",
+    "execDepends": [
+      {"name":"gawk"}
+    ],
+    "systemRequirements": {
+      "main": {
+        "instanceType": "mem3_hdd2_x4"
+      },
+      "myEntryPoint": {
+        "instanceType": "mem3_hdd2_x4"
+      }
+    }
+  },
+  "access": {
+    "network": [
+      "*"
+    ]
+  },
+  "authorizedUsers": []
+}
