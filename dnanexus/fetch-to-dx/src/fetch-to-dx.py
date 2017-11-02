@@ -55,8 +55,8 @@ def process(enc_file_name, bucket_url, proj_id, dx_folder, file_acc, dx_file_nam
     start = datetime.now()
     if not test or len(test) == 0:
         try:
-            subprocess.check_call(shlex.split('aws s3 cp %s ./%s --quiet' %(bucket_url,dx_file_name)), stderr=subprocess.STDOUT)
-            #subprocess.check_call(shlex.split('aws s3 cp %s ./%s' % (bucket_url,dx_file_name) ), stderr=subprocess.STDOUT)
+            #subprocess.check_call(shlex.split('aws s3 cp %s ./%s --quiet' %(bucket_url,dx_file_name)), stderr=subprocess.STDOUT)
+            subprocess.check_call(shlex.split('aws s3 cp %s ./%s' % (bucket_url,dx_file_name)), stderr=subprocess.STDOUT)
         except:
             try:
                 print "* s3 cp failed.  Reverting to 'wget'"
@@ -64,19 +64,20 @@ def process(enc_file_name, bucket_url, proj_id, dx_folder, file_acc, dx_file_nam
                 subprocess.check_call(shlex.split('wget %s -O %s --quiet' % (web_url,dx_file_name) ), stderr=subprocess.STDOUT)
             except:
                 print "* ERROR: Upload failed"
-                return {
-                    "file": None,
-                    "report": None,
-                    "summary": None,
-                    "zip": None
-                }
+                sys.exit(1)  # Better to fail than to return empty handed.
+                #return {
+                #    "file": None,
+                #    "report": None,
+                #    "summary": None,
+                #    "zip": None
+                #}
         end = datetime.now()
         duration = end - start
         start = end
         print "* copied to dx local in %.2f seconds" % duration.seconds
- 
+
         subprocess.check_call(shlex.split('ls -l %s' %(dx_file_name)))
-        
+
         # Make sure folder exists before copying!
         project = dxpy.DXProject(proj_id)  ## should be default
 
@@ -143,9 +144,9 @@ def main(exp_acc, files_to_fetch=None, skipvalidate=True, key='www', debug=False
         logger.debug("* f2f_json: " + files_to_fetch)
         file_objs = json.loads(files_to_fetch.encode('ascii')) # Expect [ {},{},{},... ]
         logger.debug(file_objs)
-            
+
     # f_obj = { "accession": ,"dx_folder": ,"dx_file_name": ,"enc_file_name": ,"bucket_url": }
-                 
+
     subjobs = []
     if file_objs:
         for f_obj in file_objs:
@@ -173,7 +174,7 @@ def main(exp_acc, files_to_fetch=None, skipvalidate=True, key='www', debug=False
     # This does not wait for subjob completion as I thought.
     files_fetched = [subjob.get_output_ref("file") for subjob in subjobs]
     logger.debug("Attempting to fetch %d file(s)" % (len(files_fetched)))
-    
+
     if skipvalidate:
         output = {
                     "fetched_count": len(files_fetched),
