@@ -1,9 +1,9 @@
 {
   "name": "fetch-to-dx",
-  "title": "Fetch files (v1.0.1)",
+  "title": "Fetch files (v1.0.2)",
   "summary": "Get files for an ENCODE experiment for further processing by pipelines.",
   "dxapi": "1.0.0",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "categories": [
     "Encode"
   ],
@@ -72,6 +72,8 @@
     }
   ],
   "runSpec": {
+    "distribution": "Ubuntu",
+    "release": "12.04",
     "interpreter": "python2.7",
     "file": "src/fetch-to-dx.py",
     "execDepends": [

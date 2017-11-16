@@ -1,9 +1,9 @@
 {
   "name": "comp-md5sum",
-  "title": "Compares two files with md5sum",
+  "title": "Compares two files with md5sum (v1.0.1)",
   "summary": "comp-md5sum",
   "dxapi": "1.0.0",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "categories": [],
   "inputSpec": [
     {
@@ -33,6 +33,8 @@
     }
   ],
   "runSpec": {
+    "distribution": "Ubuntu",
+    "release": "12.04",
     "interpreter": "bash",
     "file": "src/comp-md5sum.sh",
     "execDepends": [

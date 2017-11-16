@@ -3,7 +3,7 @@
   "title": "Copy Dx files in encoded to AWS",
   "summary": "Copy existing files from DX to AWS",
   "dxapi": "1.0.0",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "categories": [
     "Encode"
   ],
@@ -29,6 +29,8 @@
     }
   ],
   "runSpec": {
+    "distribution": "Ubuntu",
+    "release": "12.04",
     "interpreter": "python2.7",
     "file": "src/aws-cp-encoded.py",
     "execDepends": [

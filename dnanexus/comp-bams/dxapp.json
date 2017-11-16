@@ -1,9 +1,9 @@
 {
   "name": "comp-bams",
-  "title": "Compares two bams",
+  "title": "Compares two bams (v1.0.1)",
   "summary": "comp-bams",
   "dxapi": "1.0.0",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "categories": [],
   "inputSpec": [
     {
@@ -75,6 +75,8 @@
     }
   ],
   "runSpec": {
+    "distribution": "Ubuntu",
+    "release": "12.04",
     "interpreter": "bash",
     "file": "src/comp-bams.sh",
     "execDepends": [

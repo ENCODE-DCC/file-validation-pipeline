@@ -1,9 +1,9 @@
 {
   "name": "validate-post",
-  "title": "Validate and Post files",
+  "title": "Validate and Post files (v1.0.2)",
   "summary": "Validate ENCODED pipeline files and POST to encodeD",
   "dxapi": "1.0.0",
-  "version": "0.0.1",
+  "version": "1.0.2",
   "categories": [
     "Encode"
   ],
@@ -59,6 +59,8 @@
     }
   ],
   "runSpec": {
+    "distribution": "Ubuntu",
+    "release": "12.04",
     "interpreter": "python2.7",
     "file": "src/validate-post.py",
     "systemRequirements": {
